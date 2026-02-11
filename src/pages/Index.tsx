@@ -2,12 +2,13 @@ import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardContent } from "@/components/ui/card";
 import { CoffeeIcon } from "@/components/icons/CoffeeIcon";
 import { ChatBubbleIcon } from "@/components/icons/ChatBubbleIcon";
 import { PeopleIcon } from "@/components/icons/PeopleIcon";
 import { addUser } from "@/lib/storage";
 import { toast } from "@/hooks/use-toast";
+import { ArrowRight, Sparkles } from "lucide-react";
 
 const Index = () => {
   const navigate = useNavigate();
@@ -57,150 +58,99 @@ const Index = () => {
   };
 
   return (
-    <div className="min-h-screen bg-background">
-      {/* Header */}
-      <header className="border-b bg-card/50 backdrop-blur-sm sticky top-0 z-50">
-        <div className="container mx-auto px-4 py-4 flex items-center justify-between">
-          <div className="flex items-center gap-2">
-            <CoffeeIcon className="w-8 h-8" />
-            <span className="text-xl font-bold text-foreground">Watercooler</span>
+    <div className="min-h-screen bg-background flex flex-col">
+      {/* Minimal Header */}
+      <header className="border-b border-border/50 backdrop-blur-sm sticky top-0 z-50 bg-background/80">
+        <div className="max-w-6xl mx-auto px-6 py-4 flex items-center justify-between">
+          <div className="flex items-center gap-2.5">
+            <CoffeeIcon className="w-7 h-7" />
+            <span className="text-lg font-semibold text-foreground tracking-tight">Watercooler</span>
           </div>
           <Button 
-            variant="outline" 
+            variant="ghost" 
             onClick={() => navigate("/admin")}
-            className="text-sm"
+            className="text-muted-foreground hover:text-foreground text-sm"
           >
-            Admin Dashboard
+            Admin
           </Button>
         </div>
       </header>
 
-      {/* Hero Section */}
-      <section className="container mx-auto px-4 py-16 md:py-24">
-        <div className="grid lg:grid-cols-2 gap-12 items-center">
-          {/* Left side - Text and Form */}
-          <div className="space-y-8">
-            <div className="space-y-4">
-              <h1 className="text-4xl md:text-5xl lg:text-6xl font-bold text-foreground leading-tight">
-                Connect with your{" "}
-                <span className="text-primary">team</span>{" "}
-                over virtual{" "}
-                <span className="text-secondary">coffee</span> ☕
-              </h1>
-              <p className="text-lg md:text-xl text-muted-foreground max-w-lg">
-                Get randomly paired with teammates for casual watercooler chats. 
-                Build connections, share ideas, and make work more human!
-              </p>
-            </div>
-
-            {/* Sign Up Form */}
-            <Card className="max-w-md shadow-lg border-2">
-              <CardHeader>
-                <CardTitle className="text-2xl">Join the Watercooler</CardTitle>
-                <CardDescription>
-                  Sign up to start getting matched with teammates for coffee chats
-                </CardDescription>
-              </CardHeader>
-              <CardContent>
-                <form onSubmit={handleSubmit} className="space-y-4">
-                  <div className="space-y-2">
-                    <label htmlFor="name" className="text-sm font-medium text-foreground">
-                      Your Name
-                    </label>
-                    <Input
-                      id="name"
-                      type="text"
-                      placeholder="Jane Smith"
-                      value={name}
-                      onChange={(e) => setName(e.target.value)}
-                      className="h-12"
-                    />
-                  </div>
-                  <div className="space-y-2">
-                    <label htmlFor="email" className="text-sm font-medium text-foreground">
-                      Work Email
-                    </label>
-                    <Input
-                      id="email"
-                      type="email"
-                      placeholder="jane@company.com"
-                      value={email}
-                      onChange={(e) => setEmail(e.target.value)}
-                      className="h-12"
-                    />
-                  </div>
-                  <Button 
-                    type="submit" 
-                    className="w-full h-12 text-lg font-semibold"
-                    disabled={isSubmitting}
-                  >
-                    {isSubmitting ? "Joining..." : "Join the Watercooler ☕"}
-                  </Button>
-                </form>
-              </CardContent>
-            </Card>
+      {/* Centered Hero */}
+      <main className="flex-1 flex flex-col items-center justify-center px-6 py-16">
+        <div className="max-w-2xl w-full text-center space-y-8">
+          {/* Badge */}
+          <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-primary/10 border border-primary/20 text-primary text-sm font-medium">
+            <Sparkles className="w-3.5 h-3.5" />
+            Weekly random coffee chats
           </div>
 
-          {/* Right side - Illustrations */}
-          <div className="hidden lg:flex flex-col items-center justify-center gap-8">
-            <div className="grid grid-cols-2 gap-8">
-              <div className="flex flex-col items-center gap-3 p-6 rounded-2xl bg-primary/10 animate-float" style={{ animationDelay: "0s" }}>
-                <CoffeeIcon className="w-24 h-24" />
-                <span className="text-sm font-medium text-foreground">Weekly Chats</span>
+          {/* Headline */}
+          <h1 className="text-4xl md:text-5xl lg:text-6xl font-bold text-foreground leading-[1.1] tracking-tight">
+            Build real connections<br />
+            <span className="text-primary">one coffee at a time</span>
+          </h1>
+
+          <p className="text-muted-foreground text-lg max-w-lg mx-auto leading-relaxed">
+            Get randomly paired with teammates each week for casual watercooler conversations. No awkward scheduling — just show up and connect.
+          </p>
+
+          {/* Signup Card */}
+          <Card className="max-w-md mx-auto border border-border/60 bg-card/80 backdrop-blur-sm shadow-xl shadow-primary/5">
+            <CardContent className="pt-6 pb-6">
+              <form onSubmit={handleSubmit} className="space-y-3">
+                <Input
+                  type="text"
+                  placeholder="Your name"
+                  value={name}
+                  onChange={(e) => setName(e.target.value)}
+                  className="h-11 bg-muted/50 border-border/50 placeholder:text-muted-foreground/60"
+                />
+                <Input
+                  type="email"
+                  placeholder="Work email"
+                  value={email}
+                  onChange={(e) => setEmail(e.target.value)}
+                  className="h-11 bg-muted/50 border-border/50 placeholder:text-muted-foreground/60"
+                />
+                <Button 
+                  type="submit" 
+                  className="w-full h-11 font-semibold gap-2"
+                  disabled={isSubmitting}
+                >
+                  {isSubmitting ? "Joining..." : "Get started"}
+                  {!isSubmitting && <ArrowRight className="w-4 h-4" />}
+                </Button>
+              </form>
+            </CardContent>
+          </Card>
+        </div>
+
+        {/* How it works - horizontal */}
+        <div className="max-w-4xl w-full mt-24">
+          <div className="grid md:grid-cols-3 gap-6">
+            {[
+              { icon: <CoffeeIcon className="w-12 h-12" />, title: "Sign up", desc: "Join with your name and email in seconds" },
+              { icon: <ChatBubbleIcon className="w-12 h-12" />, title: "Set your hours", desc: "Pick the times you're free for a quick chat" },
+              { icon: <PeopleIcon className="w-12 h-12" />, title: "Get matched", desc: "We pair you with a teammate who shares free time" },
+            ].map((step, i) => (
+              <div key={i} className="group flex flex-col items-center text-center p-6 rounded-xl bg-card/50 border border-border/40 hover:border-primary/30 transition-colors">
+                <div className="mb-4 opacity-80 group-hover:opacity-100 transition-opacity">
+                  {step.icon}
+                </div>
+                <span className="text-xs font-semibold text-primary uppercase tracking-wider mb-2">Step {i + 1}</span>
+                <h3 className="font-semibold text-foreground mb-1">{step.title}</h3>
+                <p className="text-sm text-muted-foreground leading-relaxed">{step.desc}</p>
               </div>
-              <div className="flex flex-col items-center gap-3 p-6 rounded-2xl bg-secondary/10 animate-float" style={{ animationDelay: "0.5s" }}>
-                <ChatBubbleIcon className="w-24 h-24" />
-                <span className="text-sm font-medium text-foreground">Easy Scheduling</span>
-              </div>
-            </div>
-            <div className="flex flex-col items-center gap-3 p-6 rounded-2xl bg-accent/10 animate-float" style={{ animationDelay: "1s" }}>
-              <PeopleIcon className="w-24 h-24" />
-              <span className="text-sm font-medium text-foreground">Build Connections</span>
-            </div>
+            ))}
           </div>
         </div>
-      </section>
-
-      {/* Features Section */}
-      <section className="bg-muted/50 py-16">
-        <div className="container mx-auto px-4">
-          <h2 className="text-3xl font-bold text-center mb-12">How it works</h2>
-          <div className="grid md:grid-cols-3 gap-8">
-            <div className="text-center space-y-4">
-              <div className="w-16 h-16 mx-auto rounded-full bg-primary flex items-center justify-center text-primary-foreground text-2xl font-bold">
-                1
-              </div>
-              <h3 className="text-xl font-semibold">Sign Up</h3>
-              <p className="text-muted-foreground">
-                Enter your name and email to join the watercooler community
-              </p>
-            </div>
-            <div className="text-center space-y-4">
-              <div className="w-16 h-16 mx-auto rounded-full bg-secondary flex items-center justify-center text-secondary-foreground text-2xl font-bold">
-                2
-              </div>
-              <h3 className="text-xl font-semibold">Set Availability</h3>
-              <p className="text-muted-foreground">
-                Pick the times when you're free for a casual coffee chat
-              </p>
-            </div>
-            <div className="text-center space-y-4">
-              <div className="w-16 h-16 mx-auto rounded-full bg-accent flex items-center justify-center text-accent-foreground text-2xl font-bold">
-                3
-              </div>
-              <h3 className="text-xl font-semibold">Get Matched</h3>
-              <p className="text-muted-foreground">
-                Each week, you'll be paired with a teammate who shares your free time
-              </p>
-            </div>
-          </div>
-        </div>
-      </section>
+      </main>
 
       {/* Footer */}
-      <footer className="border-t py-8">
-        <div className="container mx-auto px-4 text-center text-muted-foreground">
-          <p>Made with ☕ and 💜 for better team connections</p>
+      <footer className="border-t border-border/40 py-6">
+        <div className="max-w-6xl mx-auto px-6 text-center text-sm text-muted-foreground/70">
+          Made with ☕ for better team connections
         </div>
       </footer>
     </div>
