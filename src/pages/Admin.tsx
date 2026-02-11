@@ -1,7 +1,7 @@
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
 import { CoffeeIcon } from "@/components/icons/CoffeeIcon";
@@ -19,11 +19,11 @@ import { toast } from "@/hooks/use-toast";
 import { ArrowLeft, Users, Coffee, Percent, Play, Calendar } from "lucide-react";
 
 const DAY_LABELS: Record<string, string> = {
-  monday: "Monday",
-  tuesday: "Tuesday",
-  wednesday: "Wednesday",
-  thursday: "Thursday",
-  friday: "Friday",
+  monday: "Mon",
+  tuesday: "Tue",
+  wednesday: "Wed",
+  thursday: "Thu",
+  friday: "Fri",
 };
 
 function formatHour(hour: number): string {
@@ -33,8 +33,15 @@ function formatHour(hour: number): string {
 }
 
 function formatSlot(slot: { day: string; hour: number }): string {
-  return `${DAY_LABELS[slot.day]} at ${formatHour(slot.hour)}`;
+  return `${DAY_LABELS[slot.day]} ${formatHour(slot.hour)}`;
 }
+
+const STAT_CONFIG = [
+  { key: "totalUsers" as const, label: "Users", icon: Users, color: "primary", suffix: "" },
+  { key: "usersWithAvailability" as const, label: "Available", icon: Calendar, color: "secondary", suffix: "" },
+  { key: "totalMatches" as const, label: "Matches", icon: Coffee, color: "accent", suffix: "" },
+  { key: "participationRate" as const, label: "Participation", icon: Percent, color: "coral", suffix: "%" },
+];
 
 const Admin = () => {
   const navigate = useNavigate();
@@ -55,157 +62,109 @@ const Admin = () => {
 
   const handleRunMatching = () => {
     setIsRunningMatch(true);
-    
     try {
       const newMatches = runMatchingAlgorithm();
       loadData();
-      
       if (newMatches.length === 0) {
         toast({
           title: "No new matches",
-          description: "Either matching was already run this week, or there aren't enough users with overlapping availability.",
+          description: "Not enough users with overlapping availability, or matching already ran this week.",
         });
       } else {
         toast({
-          title: `Created ${newMatches.length} new matches! 🎉`,
-          description: "Teammates have been paired based on their overlapping availability.",
+          title: `${newMatches.length} new matches created! 🎉`,
+          description: "Teammates have been paired based on overlapping availability.",
         });
       }
     } catch (error) {
-      toast({
-        title: "Something went wrong",
-        description: "Please try again.",
-        variant: "destructive",
-      });
+      toast({ title: "Something went wrong", description: "Please try again.", variant: "destructive" });
     } finally {
       setIsRunningMatch(false);
     }
   };
 
   const getUserSlotCount = (userId: string): number => {
-    const availability = getUserAvailability(userId);
-    return availability?.slots.length || 0;
+    return getUserAvailability(userId)?.slots.length || 0;
   };
 
   return (
-    <div className="min-h-screen bg-background">
+    <div className="min-h-screen bg-background flex flex-col">
       {/* Header */}
-      <header className="border-b bg-card/50 backdrop-blur-sm sticky top-0 z-50">
-        <div className="container mx-auto px-4 py-4 flex items-center justify-between">
-          <div className="flex items-center gap-2">
-            <CoffeeIcon className="w-8 h-8" />
-            <span className="text-xl font-bold text-foreground">Watercooler</span>
-            <Badge variant="secondary" className="ml-2">Admin</Badge>
+      <header className="border-b border-border/50 backdrop-blur-sm sticky top-0 z-50 bg-background/80">
+        <div className="max-w-6xl mx-auto px-6 py-4 flex items-center justify-between">
+          <div className="flex items-center gap-2.5">
+            <CoffeeIcon className="w-7 h-7" />
+            <span className="text-lg font-semibold text-foreground tracking-tight">Watercooler</span>
+            <Badge variant="secondary" className="text-[10px] uppercase tracking-widest">Admin</Badge>
           </div>
-          <Button 
-            variant="ghost" 
-            onClick={() => navigate("/")}
-            className="gap-2"
-          >
-            <ArrowLeft className="w-4 h-4" />
-            Back to Home
+          <Button variant="ghost" onClick={() => navigate("/")} className="gap-2 text-muted-foreground">
+            <ArrowLeft className="w-4 h-4" /> Home
           </Button>
         </div>
       </header>
 
-      <main className="container mx-auto px-4 py-8">
-        <div className="mb-8">
-          <h1 className="text-3xl font-bold text-foreground mb-2">Admin Dashboard</h1>
-          <p className="text-muted-foreground">Manage your watercooler program</p>
+      <main className="flex-1 max-w-6xl mx-auto px-6 py-10 w-full space-y-8">
+        {/* Title + action */}
+        <div className="flex items-end justify-between">
+          <div>
+            <h1 className="text-2xl font-bold text-foreground">Dashboard</h1>
+            <p className="text-sm text-muted-foreground">Manage your watercooler program</p>
+          </div>
+          <Button onClick={handleRunMatching} disabled={isRunningMatch || users.length < 2} className="gap-2">
+            <Play className="w-4 h-4" />
+            {isRunningMatch ? "Matching..." : "Run matching"}
+          </Button>
         </div>
 
-        {/* Stats Cards */}
-        <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-8">
-          <Card>
-            <CardContent className="pt-6">
-              <div className="flex items-center gap-4">
-                <div className="p-3 rounded-full bg-primary/10">
-                  <Users className="w-6 h-6 text-primary" />
+        {/* Stats row */}
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+          {STAT_CONFIG.map(({ key, label, icon: Icon, color, suffix }) => (
+            <Card key={key} className="border-border/40 bg-card/60">
+              <CardContent className="py-4 px-5 flex items-center gap-3">
+                <div className={`p-2 rounded-lg bg-${color}/10`}>
+                  <Icon className={`w-4 h-4 text-${color}`} />
                 </div>
                 <div>
-                  <p className="text-2xl font-bold text-foreground">{stats.totalUsers}</p>
-                  <p className="text-sm text-muted-foreground">Total Users</p>
+                  <p className="text-xl font-bold text-foreground leading-none">
+                    {stats[key]}{suffix}
+                  </p>
+                  <p className="text-xs text-muted-foreground mt-0.5">{label}</p>
                 </div>
-              </div>
-            </CardContent>
-          </Card>
-          
-          <Card>
-            <CardContent className="pt-6">
-              <div className="flex items-center gap-4">
-                <div className="p-3 rounded-full bg-secondary/10">
-                  <Calendar className="w-6 h-6 text-secondary" />
-                </div>
-                <div>
-                  <p className="text-2xl font-bold text-foreground">{stats.usersWithAvailability}</p>
-                  <p className="text-sm text-muted-foreground">With Availability</p>
-                </div>
-              </div>
-            </CardContent>
-          </Card>
-
-          <Card>
-            <CardContent className="pt-6">
-              <div className="flex items-center gap-4">
-                <div className="p-3 rounded-full bg-accent/10">
-                  <Coffee className="w-6 h-6 text-accent" />
-                </div>
-                <div>
-                  <p className="text-2xl font-bold text-foreground">{stats.totalMatches}</p>
-                  <p className="text-sm text-muted-foreground">Total Matches</p>
-                </div>
-              </div>
-            </CardContent>
-          </Card>
-
-          <Card>
-            <CardContent className="pt-6">
-              <div className="flex items-center gap-4">
-                <div className="p-3 rounded-full bg-coral/10">
-                  <Percent className="w-6 h-6 text-coral" />
-                </div>
-                <div>
-                  <p className="text-2xl font-bold text-foreground">{stats.participationRate}%</p>
-                  <p className="text-sm text-muted-foreground">Participation</p>
-                </div>
-              </div>
-            </CardContent>
-          </Card>
+              </CardContent>
+            </Card>
+          ))}
         </div>
 
-        <div className="grid lg:grid-cols-2 gap-8">
-          {/* User Management */}
-          <Card className="shadow-lg">
-            <CardHeader className="flex flex-row items-center justify-between">
-              <div>
-                <CardTitle>Team Members</CardTitle>
-                <CardDescription>All registered watercooler participants</CardDescription>
-              </div>
+        {/* Two-column tables */}
+        <div className="grid lg:grid-cols-2 gap-6">
+          {/* Team Members */}
+          <Card className="border-border/40 bg-card/60">
+            <CardHeader className="pb-3">
+              <CardTitle className="text-base">Team members</CardTitle>
             </CardHeader>
             <CardContent>
               {users.length === 0 ? (
-                <div className="text-center py-8 text-muted-foreground">
-                  <Users className="w-12 h-12 mx-auto mb-3 opacity-50" />
-                  <p>No team members yet</p>
-                  <p className="text-sm">Share the signup link to get started!</p>
+                <div className="text-center py-10 text-muted-foreground">
+                  <Users className="w-10 h-10 mx-auto mb-2 opacity-40" />
+                  <p className="text-sm">No members yet</p>
                 </div>
               ) : (
-                <div className="max-h-[400px] overflow-y-auto">
+                <div className="max-h-[360px] overflow-y-auto -mx-1 px-1">
                   <Table>
                     <TableHeader>
-                      <TableRow>
-                        <TableHead>Name</TableHead>
-                        <TableHead>Email</TableHead>
-                        <TableHead className="text-right">Slots</TableHead>
+                      <TableRow className="border-border/30">
+                        <TableHead className="text-xs">Name</TableHead>
+                        <TableHead className="text-xs">Email</TableHead>
+                        <TableHead className="text-xs text-right">Slots</TableHead>
                       </TableRow>
                     </TableHeader>
                     <TableBody>
                       {users.map((user) => (
-                        <TableRow key={user.id}>
-                          <TableCell className="font-medium">{user.name}</TableCell>
-                          <TableCell className="text-muted-foreground">{user.email}</TableCell>
-                          <TableCell className="text-right">
-                            <Badge variant={getUserSlotCount(user.id) > 0 ? "default" : "secondary"}>
+                        <TableRow key={user.id} className="border-border/20">
+                          <TableCell className="font-medium text-sm py-2.5">{user.name}</TableCell>
+                          <TableCell className="text-muted-foreground text-sm py-2.5">{user.email}</TableCell>
+                          <TableCell className="text-right py-2.5">
+                            <Badge variant={getUserSlotCount(user.id) > 0 ? "default" : "outline"} className="text-xs">
                               {getUserSlotCount(user.id)}
                             </Badge>
                           </TableCell>
@@ -218,37 +177,25 @@ const Admin = () => {
             </CardContent>
           </Card>
 
-          {/* Match History + Trigger */}
-          <Card className="shadow-lg">
-            <CardHeader className="flex flex-row items-center justify-between">
-              <div>
-                <CardTitle>Match History</CardTitle>
-                <CardDescription>Recent coffee chat pairings</CardDescription>
-              </div>
-              <Button 
-                onClick={handleRunMatching}
-                disabled={isRunningMatch || users.length < 2}
-                className="gap-2"
-              >
-                <Play className="w-4 h-4" />
-                {isRunningMatch ? "Matching..." : "Run Matching"}
-              </Button>
+          {/* Match History */}
+          <Card className="border-border/40 bg-card/60">
+            <CardHeader className="pb-3">
+              <CardTitle className="text-base">Match history</CardTitle>
             </CardHeader>
             <CardContent>
               {matches.length === 0 ? (
-                <div className="text-center py-8 text-muted-foreground">
-                  <Coffee className="w-12 h-12 mx-auto mb-3 opacity-50" />
-                  <p>No matches yet</p>
-                  <p className="text-sm">Run matching to create the first pairings!</p>
+                <div className="text-center py-10 text-muted-foreground">
+                  <Coffee className="w-10 h-10 mx-auto mb-2 opacity-40" />
+                  <p className="text-sm">No matches yet</p>
                 </div>
               ) : (
-                <div className="max-h-[400px] overflow-y-auto">
+                <div className="max-h-[360px] overflow-y-auto -mx-1 px-1">
                   <Table>
                     <TableHeader>
-                      <TableRow>
-                        <TableHead>Pair</TableHead>
-                        <TableHead>Shared Slot</TableHead>
-                        <TableHead>Week</TableHead>
+                      <TableRow className="border-border/30">
+                        <TableHead className="text-xs">Pair</TableHead>
+                        <TableHead className="text-xs">Slot</TableHead>
+                        <TableHead className="text-xs">Week</TableHead>
                       </TableRow>
                     </TableHeader>
                     <TableBody>
@@ -256,18 +203,16 @@ const Admin = () => {
                         const user1 = getUserById(match.user1Id);
                         const user2 = getUserById(match.user2Id);
                         return (
-                          <TableRow key={match.id}>
-                            <TableCell>
-                              <div className="flex flex-col">
-                                <span className="font-medium">{user1?.name || "Unknown"}</span>
-                                <span className="text-muted-foreground text-sm">& {user2?.name || "Unknown"}</span>
-                              </div>
+                          <TableRow key={match.id} className="border-border/20">
+                            <TableCell className="py-2.5">
+                              <span className="text-sm font-medium">{user1?.name || "?"}</span>
+                              <span className="text-muted-foreground text-sm"> & {user2?.name || "?"}</span>
                             </TableCell>
-                            <TableCell className="text-muted-foreground">
+                            <TableCell className="text-muted-foreground text-sm py-2.5">
                               {formatSlot(match.sharedSlot)}
                             </TableCell>
-                            <TableCell>
-                              <Badge variant="outline">{match.week}</Badge>
+                            <TableCell className="py-2.5">
+                              <Badge variant="outline" className="text-xs">{match.week}</Badge>
                             </TableCell>
                           </TableRow>
                         );
