@@ -2,117 +2,69 @@
 @tailwind components;
 @tailwind utilities;
 
-/* Watercooler - Fun & Colorful Design System
+/* Watercooler - Dark & Sleek Design System
    All colors MUST be HSL.
 */
 
 @layer base {
   :root {
-    /* Warm cream background */
-    --background: 40 50% 97%;
-    --foreground: 250 30% 20%;
+    /* Deep dark background */
+    --background: 230 25% 9%;
+    --foreground: 210 20% 92%;
 
-    /* Cards with soft white */
-    --card: 0 0% 100%;
-    --card-foreground: 250 30% 20%;
+    /* Glassmorphic cards */
+    --card: 230 20% 14%;
+    --card-foreground: 210 20% 92%;
 
-    --popover: 0 0% 100%;
-    --popover-foreground: 250 30% 20%;
+    --popover: 230 20% 14%;
+    --popover-foreground: 210 20% 92%;
 
-    /* Vibrant orange as primary */
-    --primary: 24 95% 55%;
-    --primary-foreground: 0 0% 100%;
+    /* Electric cyan primary */
+    --primary: 185 95% 55%;
+    --primary-foreground: 230 25% 9%;
 
-    /* Friendly teal as secondary */
-    --secondary: 174 60% 45%;
+    /* Neon violet secondary */
+    --secondary: 265 85% 60%;
     --secondary-foreground: 0 0% 100%;
 
-    /* Soft lavender for muted elements */
-    --muted: 260 30% 94%;
-    --muted-foreground: 250 20% 45%;
+    /* Subtle muted tones */
+    --muted: 230 15% 18%;
+    --muted-foreground: 220 15% 55%;
 
-    /* Playful purple for accents */
-    --accent: 280 65% 60%;
+    /* Hot pink accent */
+    --accent: 330 90% 60%;
     --accent-foreground: 0 0% 100%;
 
-    /* Coral red for destructive */
-    --destructive: 0 75% 55%;
+    /* Red destructive */
+    --destructive: 0 75% 50%;
     --destructive-foreground: 0 0% 100%;
 
-    /* Soft borders */
-    --border: 250 20% 88%;
-    --input: 250 20% 88%;
-    --ring: 24 95% 55%;
+    /* Subtle borders */
+    --border: 230 15% 20%;
+    --input: 230 15% 20%;
+    --ring: 185 95% 55%;
 
-    /* Larger radius for playful feel */
-    --radius: 1rem;
+    /* Tight radius for sleek feel */
+    --radius: 0.625rem;
 
-    /* Additional accent colors */
-    --teal: 174 60% 45%;
-    --teal-foreground: 0 0% 100%;
-    --purple: 280 65% 60%;
+    /* Accent palette */
+    --teal: 185 95% 55%;
+    --teal-foreground: 230 25% 9%;
+    --purple: 265 85% 60%;
     --purple-foreground: 0 0% 100%;
-    --coral: 12 85% 62%;
+    --coral: 330 90% 60%;
     --coral-foreground: 0 0% 100%;
-    --mint: 160 50% 75%;
-    --yellow: 45 95% 60%;
+    --mint: 170 60% 45%;
+    --yellow: 50 95% 60%;
 
-    --sidebar-background: 0 0% 98%;
-    --sidebar-foreground: 240 5.3% 26.1%;
-    --sidebar-primary: 24 95% 55%;
-    --sidebar-primary-foreground: 0 0% 100%;
-    --sidebar-accent: 260 30% 94%;
-    --sidebar-accent-foreground: 250 30% 20%;
-    --sidebar-border: 250 20% 88%;
-    --sidebar-ring: 24 95% 55%;
-  }
-
-  .dark {
-    --background: 250 30% 10%;
-    --foreground: 40 30% 95%;
-
-    --card: 250 25% 15%;
-    --card-foreground: 40 30% 95%;
-
-    --popover: 250 25% 15%;
-    --popover-foreground: 40 30% 95%;
-
-    --primary: 24 95% 55%;
-    --primary-foreground: 0 0% 100%;
-
-    --secondary: 174 60% 40%;
-    --secondary-foreground: 0 0% 100%;
-
-    --muted: 250 20% 20%;
-    --muted-foreground: 250 15% 65%;
-
-    --accent: 280 65% 55%;
-    --accent-foreground: 0 0% 100%;
-
-    --destructive: 0 70% 45%;
-    --destructive-foreground: 0 0% 100%;
-
-    --border: 250 20% 25%;
-    --input: 250 20% 25%;
-    --ring: 24 95% 55%;
-
-    --teal: 174 60% 40%;
-    --teal-foreground: 0 0% 100%;
-    --purple: 280 65% 55%;
-    --purple-foreground: 0 0% 100%;
-    --coral: 12 80% 55%;
-    --coral-foreground: 0 0% 100%;
-    --mint: 160 40% 35%;
-    --yellow: 45 90% 50%;
-
-    --sidebar-background: 250 25% 12%;
-    --sidebar-foreground: 40 30% 95%;
-    --sidebar-primary: 24 95% 55%;
-    --sidebar-primary-foreground: 0 0% 100%;
-    --sidebar-accent: 250 20% 20%;
-    --sidebar-accent-foreground: 40 30% 95%;
-    --sidebar-border: 250 20% 25%;
-    --sidebar-ring: 24 95% 55%;
+    --sidebar-background: 230 20% 11%;
+    --sidebar-foreground: 210 20% 92%;
+    --sidebar-primary: 185 95% 55%;
+    --sidebar-primary-foreground: 230 25% 9%;
+    --sidebar-accent: 230 15% 18%;
+    --sidebar-accent-foreground: 210 20% 92%;
+    --sidebar-border: 230 15% 20%;
+    --sidebar-ring: 185 95% 55%;
   }
 }
 
@@ -126,30 +78,38 @@
   }
 }
 
-/* Fun animations */
+/* Sleek animations */
 @keyframes float {
   0%, 100% { transform: translateY(0); }
-  50% { transform: translateY(-10px); }
+  50% { transform: translateY(-6px); }
 }
 
-@keyframes wiggle {
-  0%, 100% { transform: rotate(-3deg); }
-  50% { transform: rotate(3deg); }
+@keyframes shimmer {
+  0% { background-position: -200% 0; }
+  100% { background-position: 200% 0; }
 }
 
 @keyframes pulse-glow {
-  0%, 100% { box-shadow: 0 0 20px hsl(24 95% 55% / 0.3); }
-  50% { box-shadow: 0 0 40px hsl(24 95% 55% / 0.5); }
+  0%, 100% { box-shadow: 0 0 15px hsl(185 95% 55% / 0.2); }
+  50% { box-shadow: 0 0 30px hsl(185 95% 55% / 0.4); }
 }
 
 .animate-float {
   animation: float 3s ease-in-out infinite;
 }
 
-.animate-wiggle {
-  animation: wiggle 0.5s ease-in-out infinite;
+.animate-shimmer {
+  background-size: 200% 100%;
+  animation: shimmer 3s linear infinite;
 }
 
 .animate-pulse-glow {
   animation: pulse-glow 2s ease-in-out infinite;
+}
+
+/* Glassmorphism utility */
+.glass {
+  background: hsl(230 20% 14% / 0.6);
+  backdrop-filter: blur(16px);
+  border: 1px solid hsl(230 15% 25% / 0.5);
 }
