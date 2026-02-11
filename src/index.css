@@ -8,63 +8,63 @@
 
 @layer base {
   :root {
-    /* Deep dark background */
-    --background: 230 25% 9%;
-    --foreground: 210 20% 92%;
+    /* Soft dark background */
+    --background: 228 20% 14%;
+    --foreground: 220 15% 85%;
 
-    /* Glassmorphic cards */
-    --card: 230 20% 14%;
-    --card-foreground: 210 20% 92%;
+    /* Softened cards */
+    --card: 228 18% 18%;
+    --card-foreground: 220 15% 85%;
 
-    --popover: 230 20% 14%;
-    --popover-foreground: 210 20% 92%;
+    --popover: 228 18% 18%;
+    --popover-foreground: 220 15% 85%;
 
-    /* Electric cyan primary */
-    --primary: 185 95% 55%;
-    --primary-foreground: 230 25% 9%;
+    /* Muted cyan primary */
+    --primary: 185 55% 55%;
+    --primary-foreground: 228 20% 10%;
 
-    /* Neon violet secondary */
-    --secondary: 265 85% 60%;
+    /* Soft lavender secondary */
+    --secondary: 260 40% 58%;
     --secondary-foreground: 0 0% 100%;
 
-    /* Subtle muted tones */
-    --muted: 230 15% 18%;
-    --muted-foreground: 220 15% 55%;
+    /* Gentle muted tones */
+    --muted: 228 14% 22%;
+    --muted-foreground: 220 12% 50%;
 
-    /* Hot pink accent */
-    --accent: 330 90% 60%;
+    /* Soft rose accent */
+    --accent: 330 50% 62%;
     --accent-foreground: 0 0% 100%;
 
-    /* Red destructive */
-    --destructive: 0 75% 50%;
+    /* Muted red destructive */
+    --destructive: 0 50% 52%;
     --destructive-foreground: 0 0% 100%;
 
-    /* Subtle borders */
-    --border: 230 15% 20%;
-    --input: 230 15% 20%;
-    --ring: 185 95% 55%;
+    /* Soft borders */
+    --border: 228 12% 24%;
+    --input: 228 12% 24%;
+    --ring: 185 55% 55%;
 
-    /* Tight radius for sleek feel */
-    --radius: 0.625rem;
+    /* Rounded for softness */
+    --radius: 0.75rem;
 
     /* Accent palette */
-    --teal: 185 95% 55%;
-    --teal-foreground: 230 25% 9%;
-    --purple: 265 85% 60%;
+    --teal: 185 55% 55%;
+    --teal-foreground: 228 20% 10%;
+    --purple: 260 40% 58%;
     --purple-foreground: 0 0% 100%;
-    --coral: 330 90% 60%;
+    --coral: 330 50% 62%;
     --coral-foreground: 0 0% 100%;
-    --mint: 170 60% 45%;
-    --yellow: 50 95% 60%;
+    --mint: 170 35% 50%;
+    --yellow: 48 60% 60%;
 
-    --sidebar-background: 230 20% 11%;
-    --sidebar-foreground: 210 20% 92%;
-    --sidebar-primary: 185 95% 55%;
-    --sidebar-primary-foreground: 230 25% 9%;
-    --sidebar-accent: 230 15% 18%;
-    --sidebar-accent-foreground: 210 20% 92%;
-    --sidebar-border: 230 15% 20%;
-    --sidebar-ring: 185 95% 55%;
+    --sidebar-background: 228 18% 16%;
+    --sidebar-foreground: 220 15% 85%;
+    --sidebar-primary: 185 55% 55%;
+    --sidebar-primary-foreground: 228 20% 10%;
+    --sidebar-accent: 228 14% 22%;
+    --sidebar-accent-foreground: 220 15% 85%;
+    --sidebar-border: 228 12% 24%;
+    --sidebar-ring: 185 55% 55%;
   }
 }
 
