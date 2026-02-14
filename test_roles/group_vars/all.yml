@@ -1,0 +1,2 @@
+roleA_var: "variable A from group_vars"
+roleB_var: "variable B from group_vars"

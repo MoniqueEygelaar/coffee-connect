@@ -1,0 +1,8 @@
+- hosts: localhost
+  gather_facts: true
+
+  tasks:
+    - name: Render test template
+      template:
+        src: test.j2
+        dest: test_output.txt

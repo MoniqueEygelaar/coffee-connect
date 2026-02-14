@@ -3,7 +3,13 @@ import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { CoffeeIcon } from "@/components/icons/CoffeeIcon";
-import { getCurrentUserId, getUserById, getUserAvailability, setUserAvailability, TimeSlot } from "@/lib/storage";
+import {
+  getCurrentUserEmail,
+  getUserByEmail,
+  getUserAvailabilityByEmail,
+  setUserAvailabilityByEmail,
+  TimeSlot,
+} from "@/lib/storage";
 import { toast } from "@/hooks/use-toast";
 import { cn } from "@/lib/utils";
 import { Check, ArrowLeft, Save } from "lucide-react";
@@ -26,43 +32,56 @@ function formatHour(hour: number): string {
 }
 
 const Availability = () => {
+  const ADMIN_EMAIL = "admin@fathom.dev";
   const navigate = useNavigate();
+
+  const [currentEmail, setCurrentEmail] = useState<string | null>(null);
+  const [userName, setUserName] = useState("");
   const [selectedSlots, setSelectedSlots] = useState<TimeSlot[]>([]);
   const [isSaving, setIsSaving] = useState(false);
   const [showConfirmation, setShowConfirmation] = useState(false);
-  const [userName, setUserName] = useState("");
 
+  // ✅ Load user and availability
   useEffect(() => {
-    const userId = getCurrentUserId();
-    if (!userId) {
-      toast({
-        title: "Please sign up first",
-        description: "You need to join the watercooler before setting availability.",
-        variant: "destructive",
-      });
-      navigate("/");
-      return;
-    }
+    const fetchUserData = async () => {
+      const email = getCurrentUserEmail();
+      if (!email) {
+        toast({
+          title: "Access denied",
+          description: "You must log in first.",
+          variant: "destructive",
+        });
+        navigate("/");
+        return;
+      }
 
-    const user = getUserById(userId);
-    if (user) {
-      setUserName(user.name);
-    }
+      try {
+        const user = await getUserByEmail(email);
+        if (!user) throw new Error("User not found");
 
-    const existing = getUserAvailability(userId);
-    if (existing) {
-      setSelectedSlots(existing.slots);
-    }
+        setUserName(user.name);
+        setCurrentEmail(user.email);
+
+        const existing = await getUserAvailabilityByEmail(email);
+        if (existing?.slots?.length) setSelectedSlots(existing.slots);
+      } catch (error) {
+        console.error(error);
+        toast({
+          title: "Failed to load availability",
+          description: "Please refresh the page.",
+          variant: "destructive",
+        });
+      }
+    };
+
+    fetchUserData();
   }, [navigate]);
 
   const toggleSlot = (day: string, hour: number) => {
     setSelectedSlots((prev) => {
       const exists = prev.some((s) => s.day === day && s.hour === hour);
-      if (exists) {
-        return prev.filter((s) => !(s.day === day && s.hour === hour));
-      } else {
-        return [...prev, { day, hour }];
-      }
+      if (exists) return prev.filter((s) => !(s.day === day && s.hour === hour));
+      return [...prev, { day, hour }];
     });
   };
 
@@ -70,32 +89,29 @@ const Availability = () => {
     return selectedSlots.some((s) => s.day === day && s.hour === hour);
   };
 
-  const handleSave = () => {
-    const userId = getCurrentUserId();
-    if (!userId) {
-      navigate("/");
-      return;
-    }
+  const handleSave = async () => {
+    const email = getCurrentUserEmail();
+    if (!email) return navigate("/");
 
     if (selectedSlots.length === 0) {
       toast({
         title: "No slots selected",
-        description: "Please select at least one time slot for coffee chats.",
+        description: "Please select at least one time slot.",
         variant: "destructive",
       });
       return;
     }
 
     setIsSaving(true);
-    
     try {
-      setUserAvailability(userId, selectedSlots);
+      await setUserAvailabilityByEmail(email, selectedSlots);
       setShowConfirmation(true);
       toast({
         title: "Availability saved! 🎉",
-        description: `You've selected ${selectedSlots.length} time slots for coffee chats.`,
+        description: `You've selected ${selectedSlots.length} slots.`,
       });
     } catch (error) {
+      console.error(error);
       toast({
         title: "Something went wrong",
         description: "Please try again.",
@@ -115,7 +131,7 @@ const Availability = () => {
             <h1 className="text-3xl font-bold text-foreground">You're all set, {userName}!</h1>
             <p className="text-muted-foreground">Your availability has been saved</p>
           </div>
-          
+
           <Card className="border border-border/60 bg-card/80 text-left">
             <CardContent className="pt-5 pb-5 space-y-3">
               <p className="text-sm font-medium text-foreground">What happens next</p>
@@ -154,36 +170,52 @@ const Availability = () => {
             <CoffeeIcon className="w-7 h-7" />
             <span className="text-lg font-semibold text-foreground tracking-tight">Watercooler</span>
           </div>
-          <Button variant="ghost" onClick={() => navigate("/")} className="gap-2 text-muted-foreground">
-            <ArrowLeft className="w-4 h-4" /> Back
-          </Button>
+          <div className="flex gap-2">
+            <Button
+  variant="ghost"
+  onClick={() => {
+    // Clear current email temporarily so Back works
+    localStorage.removeItem("currentUserEmail");
+    navigate("/");
+  }}
+  className="gap-2 text-muted-foreground"
+>
+  <ArrowLeft className="w-4 h-4" /> Back
+</Button>
+
+            {currentEmail === ADMIN_EMAIL && (
+              <Button variant="ghost" onClick={() => navigate("/admin")} className="gap-2 text-muted-foreground">
+                Admin
+              </Button>
+            )}
+          </div>
         </div>
       </header>
 
+      {/* Main */}
       <main className="flex-1 max-w-4xl mx-auto px-6 py-10 w-full">
         <div className="mb-8">
           <h1 className="text-2xl md:text-3xl font-bold text-foreground mb-1">
             When are you free for coffee?
           </h1>
-          <p className="text-muted-foreground">
-            Tap the slots when you're available for a casual chat
-          </p>
+          <p className="text-muted-foreground">Tap the slots when you're available for a casual chat</p>
         </div>
 
         {/* Grid */}
         <div className="overflow-x-auto">
           <div className="min-w-[480px]">
-            {/* Day headers */}
             <div className="grid grid-cols-6 gap-1.5 mb-1.5">
               <div /> {/* Empty corner */}
               {DAYS.map((day) => (
-                <div key={day} className="h-9 flex items-center justify-center text-xs font-semibold uppercase tracking-wider text-muted-foreground">
+                <div
+                  key={day}
+                  className="h-9 flex items-center justify-center text-xs font-semibold uppercase tracking-wider text-muted-foreground"
+                >
                   {DAY_LABELS[day]}
                 </div>
               ))}
             </div>
 
-            {/* Slots */}
             {HOURS.map((hour) => (
               <div key={hour} className="grid grid-cols-6 gap-1.5 mb-1.5">
                 <div className="h-11 flex items-center justify-end pr-3 text-xs text-muted-foreground/70 tabular-nums">

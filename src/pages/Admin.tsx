@@ -5,15 +5,14 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
 import { CoffeeIcon } from "@/components/icons/CoffeeIcon";
-import { 
-  getUsers, 
-  getMatches, 
-  getUserById, 
-  getUserAvailability, 
-  runMatchingAlgorithm, 
+import {
+  getUsers,
+  getMatches,
+  runMatchingAlgorithm,
   getStats,
   Match,
-  User 
+  User,
+  getUserAvailabilityByEmail,
 } from "@/lib/storage";
 import { toast } from "@/hooks/use-toast";
 import { ArrowLeft, Users, Coffee, Percent, Play, Calendar } from "lucide-react";
@@ -37,54 +36,101 @@ function formatSlot(slot: { day: string; hour: number }): string {
 }
 
 const STAT_CONFIG = [
-  { key: "totalUsers" as const, label: "Users", icon: Users, color: "primary", suffix: "" },
-  { key: "usersWithAvailability" as const, label: "Available", icon: Calendar, color: "secondary", suffix: "" },
-  { key: "totalMatches" as const, label: "Matches", icon: Coffee, color: "accent", suffix: "" },
-  { key: "participationRate" as const, label: "Participation", icon: Percent, color: "coral", suffix: "%" },
+  { key: "totalUsers" as const, label: "Users", icon: Users, suffix: "" },
+  { key: "usersWithAvailability" as const, label: "Available", icon: Calendar, suffix: "" },
+  { key: "totalMatches" as const, label: "Matches", icon: Coffee, suffix: "" },
+  { key: "participationRate" as const, label: "Participation", icon: Percent, suffix: "%" },
 ];
 
 const Admin = () => {
   const navigate = useNavigate();
+
   const [users, setUsers] = useState<User[]>([]);
   const [matches, setMatches] = useState<Match[]>([]);
-  const [stats, setStats] = useState({ totalUsers: 0, totalMatches: 0, participationRate: 0, usersWithAvailability: 0 });
+  const [stats, setStats] = useState({
+    totalUsers: 0,
+    totalMatches: 0,
+    participationRate: 0,
+    usersWithAvailability: 0,
+  });
+  const [availabilityMap, setAvailabilityMap] = useState<Record<string, number>>({});
   const [isRunningMatch, setIsRunningMatch] = useState(false);
 
-  const loadData = () => {
-    setUsers(getUsers());
-    setMatches(getMatches().sort((a, b) => new Date(b.matchedAt).getTime() - new Date(a.matchedAt).getTime()));
-    setStats(getStats());
+  const loadData = async () => {
+    try {
+      console.log("Loading admin data...");
+
+      const usersData = await getUsers();
+      const matchesData = await getMatches();
+      const statsData = await getStats();
+      const availabilityCounts: Record<string, number> = {};
+
+      await Promise.all(
+        usersData.map(async (user) => {
+          try {
+            const availability = await getUserAvailabilityByEmail(user.email);
+            // Key by user.id instead of email
+            availabilityCounts[user.id] = availability?.slots?.length || 0;
+          } catch (err) {
+            availabilityCounts[user.id] = 0;
+          }
+        })
+      );
+
+      setUsers(usersData);
+      setMatches(matchesData);
+      setStats(statsData);
+      setAvailabilityMap(availabilityCounts);
+
+    } catch (error) {
+      console.error("LOAD DATA FAILED:", error);
+      toast({
+        title: "Failed to load data",
+        description: "Please refresh the page.",
+        variant: "destructive",
+      });
+    }
   };
 
   useEffect(() => {
-    loadData();
+    (async () => {
+      await loadData();
+    })();
   }, []);
 
-  const handleRunMatching = () => {
+  const handleRunMatching = async () => {
     setIsRunningMatch(true);
     try {
-      const newMatches = runMatchingAlgorithm();
-      loadData();
+      const newMatches = await runMatchingAlgorithm();
+      await loadData();
+
       if (newMatches.length === 0) {
         toast({
           title: "No new matches",
-          description: "Not enough users with overlapping availability, or matching already ran this week.",
+          description:
+            "Not enough users with overlapping availability, or matching already ran this week.",
         });
       } else {
         toast({
           title: `${newMatches.length} new matches created! 🎉`,
-          description: "Teammates have been paired based on overlapping availability.",
+          description:
+            "Teammates have been paired based on overlapping availability.",
         });
       }
     } catch (error) {
-      toast({ title: "Something went wrong", description: "Please try again.", variant: "destructive" });
+      console.error(error);
+      toast({
+        title: "Something went wrong",
+        description: "Please try again.",
+        variant: "destructive",
+      });
     } finally {
       setIsRunningMatch(false);
     }
   };
 
-  const getUserSlotCount = (userId: string): number => {
-    return getUserAvailability(userId)?.slots.length || 0;
+  const getUserSlotCount = (user: User): number => {
+    return availabilityMap[user.id] || 0;
   };
 
   return (
@@ -94,52 +140,67 @@ const Admin = () => {
         <div className="max-w-6xl mx-auto px-6 py-4 flex items-center justify-between">
           <div className="flex items-center gap-2.5">
             <CoffeeIcon className="w-7 h-7" />
-            <span className="text-lg font-semibold text-foreground tracking-tight">Watercooler</span>
-            <Badge variant="secondary" className="text-[10px] uppercase tracking-widest">Admin</Badge>
+            <span className="text-lg font-semibold text-foreground tracking-tight">
+              Watercooler
+            </span>
+            <Badge variant="secondary" className="text-[10px] uppercase tracking-widest">
+              Admin
+            </Badge>
           </div>
-          <Button variant="ghost" onClick={() => navigate("/")} className="gap-2 text-muted-foreground">
-            <ArrowLeft className="w-4 h-4" /> Home
+          <Button
+            variant="ghost"
+            onClick={() => navigate("/")}
+            className="gap-2 text-muted-foreground"
+          >
+            <ArrowLeft className="w-4 h-4" /> Back
           </Button>
         </div>
       </header>
 
+      {/* Main */}
       <main className="flex-1 max-w-6xl mx-auto px-6 py-10 w-full space-y-8">
-        {/* Title + action */}
+        {/* Dashboard Header */}
         <div className="flex items-end justify-between">
           <div>
             <h1 className="text-2xl font-bold text-foreground">Dashboard</h1>
-            <p className="text-sm text-muted-foreground">Manage your watercooler program</p>
+            <p className="text-sm text-muted-foreground">
+              Manage your watercooler program
+            </p>
           </div>
-          <Button onClick={handleRunMatching} disabled={isRunningMatch || users.length < 2} className="gap-2">
+          <Button
+            onClick={handleRunMatching}
+            disabled={isRunningMatch || users.length < 2}
+            className="gap-2"
+          >
             <Play className="w-4 h-4" />
             {isRunningMatch ? "Matching..." : "Run matching"}
           </Button>
         </div>
 
-        {/* Stats row */}
+        {/* Stats Cards */}
         <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
-          {STAT_CONFIG.map(({ key, label, icon: Icon, color, suffix }) => (
+          {STAT_CONFIG.map(({ key, label, icon: Icon, suffix }) => (
             <Card key={key} className="border-border/40 bg-card/60">
               <CardContent className="py-4 px-5 flex items-center gap-3">
-                <div className={`p-2 rounded-lg bg-${color}/10`}>
-                  <Icon className={`w-4 h-4 text-${color}`} />
-                </div>
+                <Icon className="w-4 h-4 text-primary" />
                 <div>
                   <p className="text-xl font-bold text-foreground leading-none">
-                    {stats[key]}{suffix}
+                    {stats[key]}
+                    {suffix}
                   </p>
-                  <p className="text-xs text-muted-foreground mt-0.5">{label}</p>
+                  <p className="text-xs text-muted-foreground mt-0.5">
+                    {label}
+                  </p>
                 </div>
               </CardContent>
             </Card>
           ))}
         </div>
 
-        {/* Two-column tables */}
         <div className="grid lg:grid-cols-2 gap-6">
-          {/* Team Members */}
+          {/* Users Table */}
           <Card className="border-border/40 bg-card/60">
-            <CardHeader className="pb-3">
+            <CardHeader>
               <CardTitle className="text-base">Team members</CardTitle>
             </CardHeader>
             <CardContent>
@@ -149,37 +210,35 @@ const Admin = () => {
                   <p className="text-sm">No members yet</p>
                 </div>
               ) : (
-                <div className="max-h-[360px] overflow-y-auto -mx-1 px-1">
-                  <Table>
-                    <TableHeader>
-                      <TableRow className="border-border/30">
-                        <TableHead className="text-xs">Name</TableHead>
-                        <TableHead className="text-xs">Email</TableHead>
-                        <TableHead className="text-xs text-right">Slots</TableHead>
+                <Table>
+                  <TableHeader>
+                    <TableRow>
+                      <TableHead>Name</TableHead>
+                      <TableHead>Email</TableHead>
+                      <TableHead className="text-right">Slots</TableHead>
+                    </TableRow>
+                  </TableHeader>
+                  <TableBody>
+                    {users.map((user) => (
+                      <TableRow key={user.email}>
+                        <TableCell>{user.name}</TableCell>
+                        <TableCell className="text-muted-foreground">{user.email}</TableCell>
+                        <TableCell className="text-right">
+                          <Badge variant={getUserSlotCount(user) > 0 ? "default" : "outline"}>
+                            {getUserSlotCount(user)}
+                          </Badge>
+                        </TableCell>
                       </TableRow>
-                    </TableHeader>
-                    <TableBody>
-                      {users.map((user) => (
-                        <TableRow key={user.id} className="border-border/20">
-                          <TableCell className="font-medium text-sm py-2.5">{user.name}</TableCell>
-                          <TableCell className="text-muted-foreground text-sm py-2.5">{user.email}</TableCell>
-                          <TableCell className="text-right py-2.5">
-                            <Badge variant={getUserSlotCount(user.id) > 0 ? "default" : "outline"} className="text-xs">
-                              {getUserSlotCount(user.id)}
-                            </Badge>
-                          </TableCell>
-                        </TableRow>
-                      ))}
-                    </TableBody>
-                  </Table>
-                </div>
+                    ))}
+                  </TableBody>
+                </Table>
               )}
             </CardContent>
           </Card>
 
-          {/* Match History */}
+          {/* Matches Table */}
           <Card className="border-border/40 bg-card/60">
-            <CardHeader className="pb-3">
+            <CardHeader>
               <CardTitle className="text-base">Match history</CardTitle>
             </CardHeader>
             <CardContent>
@@ -189,37 +248,32 @@ const Admin = () => {
                   <p className="text-sm">No matches yet</p>
                 </div>
               ) : (
-                <div className="max-h-[360px] overflow-y-auto -mx-1 px-1">
-                  <Table>
-                    <TableHeader>
-                      <TableRow className="border-border/30">
-                        <TableHead className="text-xs">Pair</TableHead>
-                        <TableHead className="text-xs">Slot</TableHead>
-                        <TableHead className="text-xs">Week</TableHead>
-                      </TableRow>
-                    </TableHeader>
-                    <TableBody>
-                      {matches.map((match) => {
-                        const user1 = getUserById(match.user1Id);
-                        const user2 = getUserById(match.user2Id);
-                        return (
-                          <TableRow key={match.id} className="border-border/20">
-                            <TableCell className="py-2.5">
-                              <span className="text-sm font-medium">{user1?.name || "?"}</span>
-                              <span className="text-muted-foreground text-sm"> & {user2?.name || "?"}</span>
-                            </TableCell>
-                            <TableCell className="text-muted-foreground text-sm py-2.5">
-                              {formatSlot(match.sharedSlot)}
-                            </TableCell>
-                            <TableCell className="py-2.5">
-                              <Badge variant="outline" className="text-xs">{match.week}</Badge>
-                            </TableCell>
-                          </TableRow>
-                        );
-                      })}
-                    </TableBody>
-                  </Table>
-                </div>
+                <Table>
+                  <TableHeader>
+                    <TableRow>
+                      <TableHead>Pair</TableHead>
+                      <TableHead>Slot</TableHead>
+                      <TableHead>Week</TableHead>
+                    </TableRow>
+                  </TableHeader>
+                  <TableBody>
+                    {matches.map((match) => {
+                      const user1 = users.find((u) => u.email === match.user1Id);
+                      const user2 = users.find((u) => u.email === match.user2Id);
+                      return (
+                        <TableRow key={match.id}>
+                          <TableCell>{user1?.name || "?"} & {user2?.name || "?"}</TableCell>
+                          <TableCell className="text-muted-foreground">
+                            {match.sharedSlot ? formatSlot(match.sharedSlot) : "-"}
+                          </TableCell>
+                          <TableCell>
+                            <Badge variant="outline">{match.week}</Badge>
+                          </TableCell>
+                        </TableRow>
+                      );
+                    })}
+                  </TableBody>
+                </Table>
               )}
             </CardContent>
           </Card>

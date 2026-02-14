@@ -1,0 +1,2 @@
+roleA_var1: "{{ ansible_default_ipv4.address | default(ansible_all_ipv4_addresses[0]) }}"
+roleA_var2: "{{ ansible_default_ipv4.get('address', ansible_all_ipv4_addresses[0]) }}"

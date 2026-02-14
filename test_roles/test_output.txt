@@ -1,0 +1,3 @@
+Address: variable B from group_vars
+Address: 11.11
+

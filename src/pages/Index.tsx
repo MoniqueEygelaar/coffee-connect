@@ -1,158 +1,146 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Card, CardContent } from "@/components/ui/card";
-import { CoffeeIcon } from "@/components/icons/CoffeeIcon";
-import { ChatBubbleIcon } from "@/components/icons/ChatBubbleIcon";
-import { PeopleIcon } from "@/components/icons/PeopleIcon";
-import { addUser } from "@/lib/storage";
 import { toast } from "@/hooks/use-toast";
-import { ArrowRight, Sparkles } from "lucide-react";
+import { getUsers, addUser, getUserByEmail, setCurrentUserEmail, User } from "@/lib/storage";
+import { CoffeeIcon } from "@/components/icons/CoffeeIcon";
+import { motion } from "framer-motion";
+
+const ADMIN_EMAIL = "admin@fathom.dev";
 
 const Index = () => {
   const navigate = useNavigate();
+  const [currentEmail, setCurrentEmailState] = useState<string | null>(
+    localStorage.getItem("watercooler_current_user")
+  );
+
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
 
-  const handleSubmit = (e: React.FormEvent) => {
+  useEffect(() => {
+    if (!currentEmail) return;
+
+    if (currentEmail === ADMIN_EMAIL) {
+      navigate("/admin");
+    } else {
+      navigate("/availability");
+    }
+  }, [currentEmail, navigate]);
+
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    
+
     if (!name.trim() || !email.trim()) {
       toast({
         title: "Oops!",
-        description: "Please fill in both your name and email.",
+        description: "Please enter both your name and email",
         variant: "destructive",
       });
       return;
     }
 
-    if (!email.includes("@")) {
-      toast({
-        title: "Invalid email",
-        description: "Please enter a valid email address.",
-        variant: "destructive",
-      });
-      return;
-    }
-
+    const normalizedEmail = email.trim().toLowerCase();
     setIsSubmitting(true);
-    
+
     try {
-      addUser({ name: name.trim(), email: email.trim() });
+      let user = await getUserByEmail(normalizedEmail);
+      if (!user) {
+        user = await addUser({ name: name.trim(), email: normalizedEmail });
+      }
+
+      setCurrentUserEmail(user.email);
+      setCurrentEmailState(user.email);
+
       toast({
-        title: "Welcome aboard! ☕",
-        description: "Let's set up your availability for coffee chats.",
+        title: `Hi, ${user.name}!`,
+        description: ``,
       });
-      navigate("/availability");
-    } catch (error) {
+    } catch (err: any) {
       toast({
-        title: "Something went wrong",
-        description: "Please try again.",
+        title: "Failed to log in",
+        description: err.message || "Please try again",
         variant: "destructive",
       });
+      console.error(err);
     } finally {
       setIsSubmitting(false);
     }
   };
 
   return (
-    <div className="min-h-screen bg-background flex flex-col">
-      {/* Minimal Header */}
-      <header className="border-b border-border/50 backdrop-blur-sm sticky top-0 z-50 bg-background/80">
-        <div className="max-w-6xl mx-auto px-6 py-4 flex items-center justify-between">
-          <div className="flex items-center gap-2.5">
-            <CoffeeIcon className="w-7 h-7" />
-            <span className="text-lg font-semibold text-foreground tracking-tight">Watercooler</span>
+    <div className="min-h-screen flex flex-col items-center justify-center bg-gradient-to-b from-red-500 to-purple-800 p-6">
+      {/* Animated Hero */}
+      <motion.div
+        initial={{ opacity: 0, y: -50 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.8 }}
+        className="text-center mb-10"
+      >
+        <CoffeeIcon className="w-20 h-20 mx-auto text-primary animate-bounce" />
+        <h1 className="text-slate-900 md:text-5xl font-bold text-foreground mt-4">
+          Fathom Coffee Corner
+        </h1>
+        <p className="text-black text-muted-foreground mt-2">
+          Connect, chat, and have virtual coffee with your teammates ☕
+        </p>
+      </motion.div>
+
+      {/* Login Form */}
+      <motion.form
+        onSubmit={handleSubmit}
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ delay: 0.3, duration: 0.5 }}
+        className="bg-white shadow-lg rounded-2xl p-8 md:p-10 w-full max-w-md space-y-6 border border-border"
+      >
+        <h2 className="text-gray-900 font-bold text-foreground text-center mb-1">Log In</h2>
+
+        <div className="space-y-4">
+          <div className="flex flex-col">
+            <label className="text-indigo-900 font-medium text-foreground mb-1">Your Name</label>
+            <input
+              type="text"
+              value={name}
+              onChange={(e) => setName(e.target.value)}
+              placeholder="e.g. Dwight Schrute"
+              className="w-full rounded-xl border border-border px-4 py-2 text-foreground focus:ring-2 focus:ring-primary focus:outline-none transition"
+            />
           </div>
-          <Button 
-            variant="ghost" 
-            onClick={() => navigate("/admin")}
-            className="text-muted-foreground hover:text-foreground text-sm"
-          >
-            Admin
-          </Button>
-        </div>
-      </header>
 
-      {/* Centered Hero */}
-      <main className="flex-1 flex flex-col items-center justify-center px-6 py-16">
-        <div className="max-w-2xl w-full text-center space-y-8">
-          {/* Badge */}
-          <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-primary/10 border border-primary/20 text-primary text-sm font-medium">
-            <Sparkles className="w-3.5 h-3.5" />
-            Weekly random coffee chats
-          </div>
-
-          {/* Headline */}
-          <h1 className="text-4xl md:text-5xl lg:text-6xl font-bold text-foreground leading-[1.1] tracking-tight">
-            Build real connections<br />
-            <span className="text-primary">one coffee at a time</span>
-          </h1>
-
-          <p className="text-muted-foreground text-lg max-w-lg mx-auto leading-relaxed">
-            Get randomly paired with teammates each week for casual watercooler conversations. No awkward scheduling — just show up and connect.
-          </p>
-
-          {/* Signup Card */}
-          <Card className="max-w-md mx-auto border border-border/60 bg-card/80 backdrop-blur-sm shadow-xl shadow-primary/5">
-            <CardContent className="pt-6 pb-6">
-              <form onSubmit={handleSubmit} className="space-y-3">
-                <Input
-                  type="text"
-                  placeholder="Your name"
-                  value={name}
-                  onChange={(e) => setName(e.target.value)}
-                  className="h-11 bg-muted/50 border-border/50 placeholder:text-muted-foreground/60"
-                />
-                <Input
-                  type="email"
-                  placeholder="Work email"
-                  value={email}
-                  onChange={(e) => setEmail(e.target.value)}
-                  className="h-11 bg-muted/50 border-border/50 placeholder:text-muted-foreground/60"
-                />
-                <Button 
-                  type="submit" 
-                  className="w-full h-11 font-semibold gap-2"
-                  disabled={isSubmitting}
-                >
-                  {isSubmitting ? "Joining..." : "Get started"}
-                  {!isSubmitting && <ArrowRight className="w-4 h-4" />}
-                </Button>
-              </form>
-            </CardContent>
-          </Card>
-        </div>
-
-        {/* How it works - horizontal */}
-        <div className="max-w-4xl w-full mt-24">
-          <div className="grid md:grid-cols-3 gap-6">
-            {[
-              { icon: <CoffeeIcon className="w-12 h-12" />, title: "Sign up", desc: "Join with your name and email in seconds" },
-              { icon: <ChatBubbleIcon className="w-12 h-12" />, title: "Set your hours", desc: "Pick the times you're free for a quick chat" },
-              { icon: <PeopleIcon className="w-12 h-12" />, title: "Get matched", desc: "We pair you with a teammate who shares free time" },
-            ].map((step, i) => (
-              <div key={i} className="group flex flex-col items-center text-center p-6 rounded-xl bg-card/50 border border-border/40 hover:border-primary/30 transition-colors">
-                <div className="mb-4 opacity-80 group-hover:opacity-100 transition-opacity">
-                  {step.icon}
-                </div>
-                <span className="text-xs font-semibold text-primary uppercase tracking-wider mb-2">Step {i + 1}</span>
-                <h3 className="font-semibold text-foreground mb-1">{step.title}</h3>
-                <p className="text-sm text-muted-foreground leading-relaxed">{step.desc}</p>
-              </div>
-            ))}
+          <div className="flex flex-col">
+            <label className="text-indigo-900 font-medium text-foreground mb-1">Email Address</label>
+            <input
+              type="email"
+              value={email}
+              onChange={(e) => setEmail(e.target.value)}
+              placeholder="e.g. dwightschrute@fathom.dev"
+              className="w-full rounded-xl border border-border px-4 py-2 text-foreground focus:ring-2 focus:ring-primary focus:outline-none transition"
+            />
           </div>
         </div>
-      </main>
 
-      {/* Footer */}
-      <footer className="border-t border-border/40 py-6">
-        <div className="max-w-6xl mx-auto px-6 text-center text-sm text-muted-foreground/70">
-          Made with ☕ for better team connections
+        <Button
+          type="submit"
+          disabled={isSubmitting}
+          className="w-full py-3 rounded-xl text-lg font-semibold"
+        >
+          {isSubmitting ? "Joining..." : "Join the Watercooler"}
+        </Button>
+
+        <div className="text-center text-sm text-muted-foreground mt-2">
+          Already joined? Just enter the same email to continue
         </div>
-      </footer>
+      </motion.form>
+
+      <motion.div
+        initial={{ opacity: 0 }}
+        animate={{ opacity: 1 }}
+        transition={{ delay: 0.5 }}
+        className="mt-10 text-center text-sm text-muted-foreground"
+      >
+        Made with ❤️ for team bonding
+      </motion.div>
     </div>
   );
 };

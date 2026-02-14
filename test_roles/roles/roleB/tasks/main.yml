@@ -1,0 +1,7 @@
+- name: Show roleA_var inside roleB
+  debug:
+    msg: "Inside roleB: roleA_var = {{ roleA_var | default('undefined') }}"
+
+- name: Show roleB_var inside roleB
+  debug:
+    msg: "Inside roleB: roleB_var = {{ roleB_var }}"

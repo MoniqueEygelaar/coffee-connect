@@ -1,0 +1,12 @@
+- hosts: localhost
+  roles:
+    - roleA
+    - roleB
+
+- hosts: localhost
+  tasks:
+    - name: Access role vars outside roles
+      debug:
+        msg:
+          - "roleA_var = {{ roleA_var | default('undefined') }}"
+          - "roleB_var = {{ roleB_var | default('undefined') }}"
