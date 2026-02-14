@@ -38,9 +38,14 @@ const STORAGE_KEYS = {
 //
 
 export async function getUsers(): Promise<User[]> {
-  const res = await fetch(`${BASE_URL}/users`);
-  if (!res.ok) throw new Error("Failed to fetch users");
-  return res.json();
+  try {
+    const res = await fetch(`${BASE_URL}/users`);
+    if (!res.ok) throw new Error("Failed to fetch users");
+    return res.json();
+  } catch {
+    console.warn("Backend unavailable, returning empty users");
+    return [];
+  }
 }
 
 export async function addUser(user: Omit<User, 'id' | 'createdAt'>): Promise<User> {
@@ -79,9 +84,13 @@ export async function getUserByEmail(email: string): Promise<User | undefined> {
 
 // Availability functions now also use email
 export async function getUserAvailabilityByEmail(email: string): Promise<UserAvailability> {
-  const res = await fetch(`${BASE_URL}/availability/${email}`);
-  if (!res.ok) throw new Error("Failed to fetch user availability");
-  return res.json();
+  try {
+    const res = await fetch(`${BASE_URL}/availability/${email}`);
+    if (!res.ok) throw new Error("Failed to fetch user availability");
+    return res.json();
+  } catch {
+    return { userId: email, slots: [] };
+  }
 }
 
 export async function setUserAvailabilityByEmail(email: string, slots: TimeSlot[]): Promise<UserAvailability> {
@@ -106,15 +115,24 @@ export async function setUserAvailabilityByEmail(email: string, slots: TimeSlot[
 //
 
 export async function getAllAvailability(): Promise<UserAvailability[]> {
-  const res = await fetch(`${BASE_URL}/availability`);
-  if (!res.ok) throw new Error("Failed to fetch availability");
-  return res.json();
+  try {
+    const res = await fetch(`${BASE_URL}/availability`);
+    if (!res.ok) throw new Error("Failed to fetch availability");
+    return res.json();
+  } catch {
+    console.warn("Backend unavailable, returning empty availability");
+    return [];
+  }
 }
 
 export async function getUserAvailability(userId: string): Promise<UserAvailability> {
-  const res = await fetch(`${BASE_URL}/availability/${userId}`);
-  if (!res.ok) throw new Error("Failed to fetch user availability");
-  return res.json();
+  try {
+    const res = await fetch(`${BASE_URL}/availability/${userId}`);
+    if (!res.ok) throw new Error("Failed to fetch user availability");
+    return res.json();
+  } catch {
+    return { userId, slots: [] };
+  }
 }
 
 export async function setUserAvailability(userId: string, slots: TimeSlot[]): Promise<UserAvailability> {
@@ -139,9 +157,14 @@ export async function setUserAvailability(userId: string, slots: TimeSlot[]): Pr
 //
 
 export async function getMatches(): Promise<Match[]> {
-  const res = await fetch(`${BASE_URL}/matches`);
-  if (!res.ok) return [];
-  return res.json();
+  try {
+    const res = await fetch(`${BASE_URL}/matches`);
+    if (!res.ok) return [];
+    return res.json();
+  } catch {
+    console.warn("Backend unavailable, returning empty matches");
+    return [];
+  }
 }
 
 export async function addMatch(match: Omit<Match, 'id'>): Promise<Match> {
