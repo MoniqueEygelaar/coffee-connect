@@ -149,10 +149,13 @@ const Admin = () => {
           </div>
           <Button
             variant="ghost"
-            onClick={() => navigate("/")}
+            onClick={() => {
+              localStorage.removeItem("watercooler_current_user");
+              navigate("/");
+            }}
             className="gap-2 text-muted-foreground"
           >
-            <ArrowLeft className="w-4 h-4" /> Back
+            <ArrowLeft className="w-4 h-4" /> Log out
           </Button>
         </div>
       </header>

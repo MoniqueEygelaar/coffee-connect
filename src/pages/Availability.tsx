@@ -172,16 +172,15 @@ const Availability = () => {
           </div>
           <div className="flex gap-2">
             <Button
-  variant="ghost"
-  onClick={() => {
-    // Clear current email temporarily so Back works
-    localStorage.removeItem("currentUserEmail");
-    navigate("/");
-  }}
-  className="gap-2 text-muted-foreground"
->
-  <ArrowLeft className="w-4 h-4" /> Back
-</Button>
+              variant="ghost"
+              onClick={() => {
+                localStorage.removeItem("watercooler_current_user");
+                navigate("/");
+              }}
+              className="gap-2 text-muted-foreground"
+            >
+              <ArrowLeft className="w-4 h-4" /> Log out
+            </Button>
 
             {currentEmail === ADMIN_EMAIL && (
               <Button variant="ghost" onClick={() => navigate("/admin")} className="gap-2 text-muted-foreground">
