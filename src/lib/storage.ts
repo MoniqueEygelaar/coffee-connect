@@ -31,6 +31,15 @@ const STORAGE_KEYS = {
   CURRENT_USER_EMAIL: 'watercooler_current_user',
 };
 
+// Fallback users when backend is unavailable
+const FALLBACK_USERS: User[] = [
+  { id: "0", name: "Alice", email: "alice@fathom.dev", createdAt: new Date().toISOString() },
+  { id: "1", name: "admin", email: "admin@fathom.dev", createdAt: new Date().toISOString() },
+  { id: "2", name: "Bob", email: "bob@fathom.dev", createdAt: new Date().toISOString() },
+  { id: "3", name: "Charlie", email: "charlie@fathom.dev", createdAt: new Date().toISOString() },
+  { id: "4", name: "Dana", email: "dana@fathom.dev", createdAt: new Date().toISOString() },
+];
+
 //
 // ====================
 // USERS (API)
@@ -43,24 +52,39 @@ export async function getUsers(): Promise<User[]> {
     if (!res.ok) throw new Error("Failed to fetch users");
     return res.json();
   } catch {
-    console.warn("Backend unavailable, returning empty users");
-    return [];
+    console.warn("Backend unavailable, using fallback users");
+    return FALLBACK_USERS;
   }
 }
 
 export async function addUser(user: Omit<User, 'id' | 'createdAt'>): Promise<User> {
-  const res = await fetch(`${BASE_URL}/users`, {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify(user),
-  });
+  try {
+    const res = await fetch(`${BASE_URL}/users`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(user),
+    });
 
-  if (!res.ok) {
-    const err = await res.json().catch(() => null);
-    throw new Error(err?.error || "Failed to create user");
+    if (!res.ok) {
+      const err = await res.json().catch(() => null);
+      throw new Error(err?.error || "Failed to create user");
+    }
+
+    return res.json();
+  } catch {
+    // Fallback: check if user exists in fallback list
+    const existing = FALLBACK_USERS.find(u => u.email === user.email);
+    if (existing) return existing;
+    // Create a local-only user
+    const newUser: User = {
+      id: String(FALLBACK_USERS.length),
+      name: user.name,
+      email: user.email,
+      createdAt: new Date().toISOString(),
+    };
+    FALLBACK_USERS.push(newUser);
+    return newUser;
   }
-
-  return res.json();
 }
 
 export async function getUserById(id: string): Promise<User | undefined> {
