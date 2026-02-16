@@ -152,7 +152,10 @@ const Availability = () => {
             <Button variant="outline" onClick={() => setShowConfirmation(false)} className="flex-1">
               Edit availability
             </Button>
-            <Button onClick={() => navigate("/")} className="flex-1 gap-2">
+            <Button onClick={() => {
+              localStorage.removeItem("watercooler_current_user");
+              navigate("/");
+            }} className="flex-1 gap-2">
               <ArrowLeft className="w-4 h-4" /> Home
             </Button>
           </div>
