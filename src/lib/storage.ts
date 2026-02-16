@@ -113,23 +113,33 @@ export async function getUserAvailabilityByEmail(email: string): Promise<UserAva
     if (!res.ok) throw new Error("Failed to fetch user availability");
     return res.json();
   } catch {
+    // Fallback to localStorage
+    const stored = localStorage.getItem(`watercooler_availability_${email}`);
+    if (stored) return JSON.parse(stored);
     return { userId: email, slots: [] };
   }
 }
 
 export async function setUserAvailabilityByEmail(email: string, slots: TimeSlot[]): Promise<UserAvailability> {
-  const res = await fetch(`${BASE_URL}/availability`, {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ userId: email, slots }), // still send `userId` to backend, but it's the email
-  });
+  try {
+    const res = await fetch(`${BASE_URL}/availability`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ userId: email, slots }),
+    });
 
-  if (!res.ok) {
-    const err = await res.json().catch(() => null);
-    throw new Error(err?.error || "Failed to save availability");
+    if (!res.ok) {
+      const err = await res.json().catch(() => null);
+      throw new Error(err?.error || "Failed to save availability");
+    }
+
+    return res.json();
+  } catch {
+    // Fallback to localStorage
+    const data: UserAvailability = { userId: email, slots };
+    localStorage.setItem(`watercooler_availability_${email}`, JSON.stringify(data));
+    return data;
   }
-
-  return res.json();
 }
 
 //
