@@ -41,7 +41,9 @@ export type Database = {
           matched_at: string
           shared_slot: Json
           user1_email: string
+          user1_status: string
           user2_email: string
+          user2_status: string
           week: string
         }
         Insert: {
@@ -49,7 +51,9 @@ export type Database = {
           matched_at?: string
           shared_slot: Json
           user1_email: string
+          user1_status?: string
           user2_email: string
+          user2_status?: string
           week: string
         }
         Update: {
@@ -57,7 +61,9 @@ export type Database = {
           matched_at?: string
           shared_slot?: Json
           user1_email?: string
+          user1_status?: string
           user2_email?: string
+          user2_status?: string
           week?: string
         }
         Relationships: []
