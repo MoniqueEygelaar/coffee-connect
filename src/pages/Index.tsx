@@ -87,7 +87,7 @@ const Index = () => {
         <h1 className="text-slate-900 md:text-5xl font-bold text-foreground mt-4">
           Fathom Coffee Corner
         </h1>
-        <p className="text-black text-muted-foreground mt-2">
+        <p className="text-gray-800 mt-2">
           Connect, chat, and have virtual coffee with your teammates ☕
         </p>
       </motion.div>
