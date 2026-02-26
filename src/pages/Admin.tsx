@@ -167,16 +167,17 @@ const Admin = () => {
           <div>
             <h1 className="text-2xl font-bold text-foreground">Dashboard</h1>
             <p className="text-sm text-muted-foreground">
-              Manage your watercooler program
+              Matching runs automatically every Friday at 12 PM
             </p>
           </div>
           <Button
             onClick={handleRunMatching}
             disabled={isRunningMatch || users.length < 2}
+            variant="outline"
             className="gap-2"
           >
             <Play className="w-4 h-4" />
-            {isRunningMatch ? "Matching..." : "Run matching"}
+            {isRunningMatch ? "Matching..." : "Run matching now"}
           </Button>
         </div>
 
