@@ -50,12 +50,18 @@ const Index = () => {
       }
 
       setCurrentUserEmail(user.email);
-      setCurrentEmailState(user.email);
 
       toast({
         title: `Hi, ${user.name}!`,
         description: ``,
       });
+
+      // Navigate directly based on email
+      if (user.email === ADMIN_EMAIL) {
+        navigate("/admin");
+      } else {
+        navigate("/availability");
+      }
     } catch (err: any) {
       toast({
         title: "Failed to log in",
