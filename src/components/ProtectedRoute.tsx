@@ -2,13 +2,11 @@ import { ReactNode, useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { getCurrentUserEmail } from "@/lib/storage";
 import { toast } from "@/hooks/use-toast";
-
+import { isAdminEmail } from "@/lib/admin";
 interface ProtectedRouteProps {
   children: ReactNode;
   adminOnly?: boolean; // optional flag
 }
-
-const ADMIN_EMAIL = "admin@fathom.dev";
 
 const ProtectedRoute = ({ children, adminOnly = false }: ProtectedRouteProps) => {
   const navigate = useNavigate();
@@ -27,7 +25,7 @@ const ProtectedRoute = ({ children, adminOnly = false }: ProtectedRouteProps) =>
       return;
     }
 
-    if (adminOnly && email !== ADMIN_EMAIL) {
+    if (adminOnly && !isAdminEmail(email)) {
       toast({
         title: "Access denied",
         description: "You must be an admin to view this page.",

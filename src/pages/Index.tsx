@@ -6,7 +6,7 @@ import { getUsers, addUser, getUserByEmail, setCurrentUserEmail, User } from "@/
 import { CoffeeIcon } from "@/components/icons/CoffeeIcon";
 import { motion } from "framer-motion";
 
-const ADMIN_EMAIL = "admin@fathom.dev";
+import { isAdminEmail } from "@/lib/admin";
 
 const Index = () => {
   const navigate = useNavigate();
@@ -21,7 +21,7 @@ const Index = () => {
   useEffect(() => {
     if (!currentEmail) return;
 
-    if (currentEmail === ADMIN_EMAIL) {
+    if (isAdminEmail(currentEmail)) {
       navigate("/admin");
     } else {
       navigate("/availability");
@@ -57,7 +57,7 @@ const Index = () => {
       });
 
       // Navigate directly based on email
-      if (user.email === ADMIN_EMAIL) {
+      if (isAdminEmail(user.email)) {
         navigate("/admin");
       } else {
         navigate("/availability");
