@@ -15,6 +15,9 @@ import { cn } from "@/lib/utils";
 import { Check, ArrowLeft, Save } from "lucide-react";
 import { isAdminEmail } from "@/lib/admin";
 import PendingMatches from "@/components/PendingMatches";
+import ProfileEditor from "@/components/ProfileEditor";
+import StreakBadge from "@/components/StreakBadge";
+import { supabase } from "@/integrations/supabase/client";
 const DAYS = ["monday", "tuesday", "wednesday", "thursday", "friday"] as const;
 const DAY_LABELS: Record<string, string> = {
   monday: "Mon",
@@ -41,6 +44,8 @@ const Availability = () => {
   const [selectedSlots, setSelectedSlots] = useState<TimeSlot[]>([]);
   const [isSaving, setIsSaving] = useState(false);
   const [showConfirmation, setShowConfirmation] = useState(false);
+  const [funFact, setFunFact] = useState("");
+  const [interests, setInterests] = useState<string[]>([]);
 
   // ✅ Load user and availability
   useEffect(() => {
@@ -62,6 +67,8 @@ const Availability = () => {
 
         setUserName(user.name);
         setCurrentEmail(user.email);
+        setFunFact((user as any).fun_fact || "");
+        setInterests((user as any).interests || []);
 
         const existing = await getUserAvailabilityByEmail(email);
         if (existing?.slots?.length) setSelectedSlots(existing.slots);
@@ -257,10 +264,24 @@ const Availability = () => {
           </Button>
         </div>
 
-        {/* Pending matches */}
         {currentEmail && (
-          <div className="mt-10">
+          <div className="mt-10 space-y-6">
             <PendingMatches email={currentEmail} />
+            
+            <StreakBadge email={currentEmail} />
+
+            <ProfileEditor
+              email={currentEmail}
+              initialFunFact={funFact}
+              initialInterests={interests}
+              onSaved={async () => {
+                const user = await getUserByEmail(currentEmail);
+                if (user) {
+                  setFunFact((user as any).fun_fact || "");
+                  setInterests((user as any).interests || []);
+                }
+              }}
+            />
           </div>
         )}
       </main>
