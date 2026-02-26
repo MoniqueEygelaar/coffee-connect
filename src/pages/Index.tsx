@@ -14,7 +14,6 @@ const Index = () => {
     localStorage.getItem("watercooler_current_user")
   );
 
-  const [name, setName] = useState("");
   const [email, setEmail] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
 
@@ -31,10 +30,10 @@ const Index = () => {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
 
-    if (!name.trim() || !email.trim()) {
+    if (!email.trim()) {
       toast({
         title: "Oops!",
-        description: "Please enter both your name and email",
+        description: "Please enter your email",
         variant: "destructive",
       });
       return;
@@ -46,7 +45,8 @@ const Index = () => {
     try {
       let user = await getUserByEmail(normalizedEmail);
       if (!user) {
-        user = await addUser({ name: name.trim(), email: normalizedEmail });
+        const nameFromEmail = normalizedEmail.split("@")[0].replace(/[._]/g, " ").replace(/\b\w/g, c => c.toUpperCase());
+        user = await addUser({ name: nameFromEmail, email: normalizedEmail });
       }
 
       setCurrentUserEmail(user.email);
@@ -103,17 +103,6 @@ const Index = () => {
         <h2 className="text-gray-900 font-bold text-foreground text-center mb-1">Log In</h2>
 
         <div className="space-y-4">
-          <div className="flex flex-col">
-            <label className="text-indigo-900 font-medium text-foreground mb-1">Your Name</label>
-            <input
-              type="text"
-              value={name}
-              onChange={(e) => setName(e.target.value)}
-              placeholder="e.g. Dwight Schrute"
-              className="w-full rounded-xl border border-border px-4 py-2 text-gray-900 focus:ring-2 focus:ring-primary focus:outline-none transition"
-            />
-          </div>
-
           <div className="flex flex-col">
             <label className="text-indigo-900 font-medium text-foreground mb-1">Email Address</label>
             <input
