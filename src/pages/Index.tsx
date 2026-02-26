@@ -110,7 +110,7 @@ const Index = () => {
               value={name}
               onChange={(e) => setName(e.target.value)}
               placeholder="e.g. Dwight Schrute"
-              className="w-full rounded-xl border border-border px-4 py-2 text-foreground focus:ring-2 focus:ring-primary focus:outline-none transition"
+              className="w-full rounded-xl border border-border px-4 py-2 text-gray-900 focus:ring-2 focus:ring-primary focus:outline-none transition"
             />
           </div>
 
@@ -121,7 +121,7 @@ const Index = () => {
               value={email}
               onChange={(e) => setEmail(e.target.value)}
               placeholder="e.g. dwightschrute@fathom.dev"
-              className="w-full rounded-xl border border-border px-4 py-2 text-foreground focus:ring-2 focus:ring-primary focus:outline-none transition"
+              className="w-full rounded-xl border border-border px-4 py-2 text-gray-900 focus:ring-2 focus:ring-primary focus:outline-none transition"
             />
           </div>
         </div>
@@ -143,7 +143,7 @@ const Index = () => {
         initial={{ opacity: 0 }}
         animate={{ opacity: 1 }}
         transition={{ delay: 0.5 }}
-        className="mt-10 text-center text-sm text-muted-foreground"
+        className="mt-10 text-center text-sm text-gray-300"
       >
         Made with ❤️ for team bonding
       </motion.div>
