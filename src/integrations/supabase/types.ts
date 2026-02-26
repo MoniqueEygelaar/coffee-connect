@@ -14,7 +14,75 @@ export type Database = {
   }
   public: {
     Tables: {
-      [_ in never]: never
+      availability: {
+        Row: {
+          id: string
+          slots: Json
+          updated_at: string
+          user_email: string
+        }
+        Insert: {
+          id?: string
+          slots?: Json
+          updated_at?: string
+          user_email: string
+        }
+        Update: {
+          id?: string
+          slots?: Json
+          updated_at?: string
+          user_email?: string
+        }
+        Relationships: []
+      }
+      matches: {
+        Row: {
+          id: string
+          matched_at: string
+          shared_slot: Json
+          user1_email: string
+          user2_email: string
+          week: string
+        }
+        Insert: {
+          id?: string
+          matched_at?: string
+          shared_slot: Json
+          user1_email: string
+          user2_email: string
+          week: string
+        }
+        Update: {
+          id?: string
+          matched_at?: string
+          shared_slot?: Json
+          user1_email?: string
+          user2_email?: string
+          week?: string
+        }
+        Relationships: []
+      }
+      users: {
+        Row: {
+          created_at: string
+          email: string
+          id: string
+          name: string
+        }
+        Insert: {
+          created_at?: string
+          email: string
+          id?: string
+          name: string
+        }
+        Update: {
+          created_at?: string
+          email?: string
+          id?: string
+          name?: string
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never
