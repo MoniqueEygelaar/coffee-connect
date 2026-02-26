@@ -261,13 +261,13 @@ const Admin = () => {
                   </TableHeader>
                   <TableBody>
                     {matches.map((match) => {
-                      const user1 = users.find((u) => u.email === match.user1Id);
-                      const user2 = users.find((u) => u.email === match.user2Id);
+                      const user1 = users.find((u) => u.email === match.user1_email);
+                      const user2 = users.find((u) => u.email === match.user2_email);
                       return (
                         <TableRow key={match.id}>
                           <TableCell>{user1?.name || "?"} & {user2?.name || "?"}</TableCell>
                           <TableCell className="text-muted-foreground">
-                            {match.sharedSlot ? formatSlot(match.sharedSlot) : "-"}
+                            {match.shared_slot ? formatSlot(match.shared_slot) : "-"}
                           </TableCell>
                           <TableCell>
                             <Badge variant="outline">{match.week}</Badge>

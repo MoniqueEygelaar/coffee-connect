@@ -1,10 +1,12 @@
-// storage.ts — fully backend-powered
+// storage.ts — powered by Lovable Cloud
+
+import { supabase } from "@/integrations/supabase/client";
 
 export interface User {
   id: string;
   name: string;
   email: string;
-  createdAt: string;
+  created_at: string;
 }
 
 export interface TimeSlot {
@@ -19,77 +21,50 @@ export interface UserAvailability {
 
 export interface Match {
   id: string;
-  user1Id: string;
-  user2Id: string;
-  matchedAt: string;
-  sharedSlot: TimeSlot;
+  user1_email: string;
+  user2_email: string;
+  matched_at: string;
+  shared_slot: TimeSlot;
   week: string;
 }
 
-const BASE_URL = "http://localhost:4000";
 const STORAGE_KEYS = {
-  CURRENT_USER_EMAIL: 'watercooler_current_user',
+  CURRENT_USER_EMAIL: "watercooler_current_user",
 };
 
-// Fallback users when backend is unavailable
-const FALLBACK_USERS: User[] = [
-  { id: "0", name: "Alice", email: "alice@fathom.dev", createdAt: new Date().toISOString() },
-  { id: "1", name: "admin", email: "admin@fathom.dev", createdAt: new Date().toISOString() },
-  { id: "2", name: "Bob", email: "bob@fathom.dev", createdAt: new Date().toISOString() },
-  { id: "3", name: "Charlie", email: "charlie@fathom.dev", createdAt: new Date().toISOString() },
-  { id: "4", name: "Dana", email: "dana@fathom.dev", createdAt: new Date().toISOString() },
-];
-
-//
-// ====================
-// USERS (API)
-// ====================
-//
+// ==================== USERS ====================
 
 export async function getUsers(): Promise<User[]> {
-  try {
-    const res = await fetch(`${BASE_URL}/users`);
-    if (!res.ok) throw new Error("Failed to fetch users");
-    return res.json();
-  } catch {
-    console.warn("Backend unavailable, using fallback users");
-    return FALLBACK_USERS;
-  }
+  const { data, error } = await supabase
+    .from("users")
+    .select("*")
+    .order("created_at", { ascending: true });
+  if (error) throw error;
+  return (data as any[]) || [];
 }
 
-export async function addUser(user: Omit<User, 'id' | 'createdAt'>): Promise<User> {
-  try {
-    const res = await fetch(`${BASE_URL}/users`, {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(user),
-    });
-
-    if (!res.ok) {
-      const err = await res.json().catch(() => null);
-      throw new Error(err?.error || "Failed to create user");
-    }
-
-    return res.json();
-  } catch {
-    // Fallback: check if user exists in fallback list
-    const existing = FALLBACK_USERS.find(u => u.email === user.email);
-    if (existing) return existing;
-    // Create a local-only user
-    const newUser: User = {
-      id: String(FALLBACK_USERS.length),
-      name: user.name,
-      email: user.email,
-      createdAt: new Date().toISOString(),
-    };
-    FALLBACK_USERS.push(newUser);
-    return newUser;
-  }
+export async function addUser(
+  user: Omit<User, "id" | "created_at">
+): Promise<User> {
+  const { data, error } = await supabase
+    .from("users")
+    .insert({ name: user.name, email: user.email })
+    .select()
+    .single();
+  if (error) throw error;
+  return data as any;
 }
 
-export async function getUserById(id: string): Promise<User | undefined> {
-  const users = await getUsers();
-  return users.find(u => u.email === id);
+export async function getUserByEmail(
+  email: string
+): Promise<User | undefined> {
+  const { data, error } = await supabase
+    .from("users")
+    .select("*")
+    .eq("email", email)
+    .maybeSingle();
+  if (error) throw error;
+  return (data as any) || undefined;
 }
 
 export function getCurrentUserEmail(): string | null {
@@ -100,236 +75,106 @@ export function setCurrentUserEmail(email: string): void {
   localStorage.setItem(STORAGE_KEYS.CURRENT_USER_EMAIL, email);
 }
 
-// Lookup a user by email instead of ID
-export async function getUserByEmail(email: string): Promise<User | undefined> {
-  const users = await getUsers();
-  return users.find(u => u.email === email);
+// ==================== AVAILABILITY ====================
+
+export async function getUserAvailabilityByEmail(
+  email: string
+): Promise<UserAvailability> {
+  const { data, error } = await supabase
+    .from("availability")
+    .select("*")
+    .eq("user_email", email)
+    .maybeSingle();
+  if (error) throw error;
+  if (!data) return { userId: email, slots: [] };
+  return { userId: email, slots: (data as any).slots || [] };
 }
 
-// Availability functions now also use email
-export async function getUserAvailabilityByEmail(email: string): Promise<UserAvailability> {
-  try {
-    const res = await fetch(`${BASE_URL}/availability/${email}`);
-    if (!res.ok) throw new Error("Failed to fetch user availability");
-    return res.json();
-  } catch {
-    // Fallback to localStorage
-    const stored = localStorage.getItem(`watercooler_availability_${email}`);
-    if (stored) return JSON.parse(stored);
-    return { userId: email, slots: [] };
+export async function setUserAvailabilityByEmail(
+  email: string,
+  slots: TimeSlot[]
+): Promise<UserAvailability> {
+  const { data: existing } = await supabase
+    .from("availability")
+    .select("id")
+    .eq("user_email", email)
+    .maybeSingle();
+
+  if (existing) {
+    const { error } = await supabase
+      .from("availability")
+      .update({ slots: slots as any, updated_at: new Date().toISOString() })
+      .eq("user_email", email);
+    if (error) throw error;
+  } else {
+    const { error } = await supabase
+      .from("availability")
+      .insert({ user_email: email, slots: slots as any });
+    if (error) throw error;
   }
+
+  return { userId: email, slots };
 }
-
-export async function setUserAvailabilityByEmail(email: string, slots: TimeSlot[]): Promise<UserAvailability> {
-  try {
-    const res = await fetch(`${BASE_URL}/availability`, {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ userId: email, slots }),
-    });
-
-    if (!res.ok) {
-      const err = await res.json().catch(() => null);
-      throw new Error(err?.error || "Failed to save availability");
-    }
-
-    return res.json();
-  } catch {
-    // Fallback to localStorage
-    const data: UserAvailability = { userId: email, slots };
-    localStorage.setItem(`watercooler_availability_${email}`, JSON.stringify(data));
-    return data;
-  }
-}
-
-//
-// ====================
-// AVAILABILITY (API)
-// ====================
-//
 
 export async function getAllAvailability(): Promise<UserAvailability[]> {
-  try {
-    const res = await fetch(`${BASE_URL}/availability`);
-    if (!res.ok) throw new Error("Failed to fetch availability");
-    return res.json();
-  } catch {
-    console.warn("Backend unavailable, returning empty availability");
-    return [];
-  }
+  const { data, error } = await supabase.from("availability").select("*");
+  if (error) throw error;
+  return (data as any[])?.map((a) => ({
+    userId: a.user_email,
+    slots: a.slots || [],
+  })) || [];
 }
 
-export async function getUserAvailability(userId: string): Promise<UserAvailability> {
-  try {
-    const res = await fetch(`${BASE_URL}/availability/${userId}`);
-    if (!res.ok) throw new Error("Failed to fetch user availability");
-    return res.json();
-  } catch {
-    return { userId, slots: [] };
-  }
-}
-
-export async function setUserAvailability(userId: string, slots: TimeSlot[]): Promise<UserAvailability> {
-  const res = await fetch(`${BASE_URL}/availability`, {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ userId, slots }),
-  });
-
-  if (!res.ok) {
-    const err = await res.json().catch(() => null);
-    throw new Error(err?.error || "Failed to save availability");
-  }
-
-  return res.json();
-}
-
-//
-// ====================
-// MATCHES (API)
-// ====================
-//
+// ==================== MATCHES ====================
 
 export async function getMatches(): Promise<Match[]> {
-  try {
-    const res = await fetch(`${BASE_URL}/matches`);
-    if (!res.ok) return [];
-    return res.json();
-  } catch {
-    console.warn("Backend unavailable, returning empty matches");
-    return [];
-  }
+  const { data, error } = await supabase
+    .from("matches")
+    .select("*")
+    .order("matched_at", { ascending: false });
+  if (error) throw error;
+  return (data as any[]) || [];
 }
 
-export async function addMatch(match: Omit<Match, 'id'>): Promise<Match> {
-  const res = await fetch(`${BASE_URL}/matches`, {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify(match),
-  });
+export async function runMatchingAlgorithm(): Promise<Match[]> {
+  const projectId = import.meta.env.VITE_SUPABASE_PROJECT_ID;
+  const anonKey = import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY;
+
+  const res = await fetch(
+    `https://${projectId}.supabase.co/functions/v1/run-matching`,
+    {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${anonKey}`,
+      },
+    }
+  );
 
   if (!res.ok) {
     const err = await res.json().catch(() => null);
-    throw new Error(err?.error || "Failed to create match");
+    throw new Error(err?.error || "Matching failed");
   }
 
-  return res.json();
+  const result = await res.json();
+  return result.matches || [];
 }
 
-export async function getRecentMatches(userId: string, weeksBack: number = 4): Promise<Match[]> {
-  const matches = await getMatches();
-  const cutoff = new Date();
-  cutoff.setDate(cutoff.getDate() - weeksBack * 7);
-
-  return matches.filter(
-    m => (m.user1Id === userId || m.user2Id === userId) &&
-         new Date(m.matchedAt) >= cutoff
-  );
-}
-
-//
-// ====================
-// WEEK HELPER
-// ====================
-//
-
-export function getCurrentWeek(): string {
-  const now = new Date();
-  const startOfYear = new Date(now.getFullYear(), 0, 1);
-  const days = Math.floor((now.getTime() - startOfYear.getTime()) / (24*60*60*1000));
-  const week = Math.ceil((days + startOfYear.getDay() + 1) / 7);
-  return `${now.getFullYear()}-W${week.toString().padStart(2, '0')}`;
-}
-
-//
-// ====================
-// MATCHING ALGORITHM
-// ====================
-//
-
-export async function runMatchingAlgorithm(): Promise<Match[]> {
-  const users = await getUsers();
-  const availabilities = await getAllAvailability();
-  const existingMatches = await getMatches();
-  const currentWeek = getCurrentWeek();
-
-  // Skip if matches already exist this week
-  const thisWeekMatches = existingMatches.filter(m => m.week === currentWeek);
-  if (thisWeekMatches.length > 0) return thisWeekMatches;
-
-  const newMatches: Match[] = [];
-  const matchedThisWeek = new Set<string>();
-  const shuffledUsers = [...users].sort(() => Math.random() - 0.5);
-
-  for (let i = 0; i < shuffledUsers.length; i++) {
-    const user1 = shuffledUsers[i];
-    if (matchedThisWeek.has(user1.email)) continue;
-
-    const user1Availability = availabilities.find(a => a.userId === user1.email);
-    if (!user1Availability?.slots.length) continue;
-
-    for (let j = i + 1; j < shuffledUsers.length; j++) {
-      const user2 = shuffledUsers[j];
-      if (matchedThisWeek.has(user2.email)) continue;
-
-      const user2Availability = availabilities.find(a => a.userId === user2.email);
-      if (!user2Availability?.slots.length) continue;
-
-      // Overlapping slots
-      const overlappingSlots = user1Availability.slots.filter(slot1 =>
-        user2Availability.slots.some(slot2 =>
-          slot1.day === slot2.day && slot1.hour === slot2.hour
-        )
-      );
-
-      if (overlappingSlots.length > 0) {
-        const sharedSlot = overlappingSlots[Math.floor(Math.random() * overlappingSlots.length)];
-
-        const match = await addMatch({
-          user1Id: user1.email,
-          user2Id: user2.email,
-          matchedAt: new Date().toISOString(),
-          sharedSlot,
-          week: currentWeek,
-        });
-
-        newMatches.push(match);
-        matchedThisWeek.add(user1.email);
-        matchedThisWeek.add(user2.email);
-        break;
-      }
-    }
-  }
-
-  return newMatches;
-}
-
-//
-// ====================
-// STATS
-// ====================
-//
+// ==================== STATS ====================
 
 export async function getStats() {
   const users = await getUsers();
   const matches = await getMatches();
+  const availability = await getAllAvailability();
 
-  let usersWithAvailability = 0;
+  const usersWithAvailability = availability.filter(
+    (a) => a.slots.length > 0
+  ).length;
 
-  await Promise.all(
-    users.map(async (user) => {
-      try {
-        const availability = await getUserAvailabilityByEmail(user.email);
-        if (availability?.slots?.length) usersWithAvailability++;
-      } catch {
-        // if user has no availability, just skip
-      }
-    })
-  );
-
-  const participationRate = users.length > 0
-    ? Math.round((usersWithAvailability / users.length) * 100)
-    : 0;
+  const participationRate =
+    users.length > 0
+      ? Math.round((usersWithAvailability / users.length) * 100)
+      : 0;
 
   return {
     totalUsers: users.length,
@@ -339,3 +184,14 @@ export async function getStats() {
   };
 }
 
+// ==================== WEEK HELPER ====================
+
+export function getCurrentWeek(): string {
+  const now = new Date();
+  const startOfYear = new Date(now.getFullYear(), 0, 1);
+  const days = Math.floor(
+    (now.getTime() - startOfYear.getTime()) / (24 * 60 * 60 * 1000)
+  );
+  const week = Math.ceil((days + startOfYear.getDay() + 1) / 7);
+  return `${now.getFullYear()}-W${week.toString().padStart(2, "0")}`;
+}
