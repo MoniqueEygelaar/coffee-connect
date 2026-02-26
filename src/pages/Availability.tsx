@@ -14,6 +14,7 @@ import { toast } from "@/hooks/use-toast";
 import { cn } from "@/lib/utils";
 import { Check, ArrowLeft, Save } from "lucide-react";
 import { isAdminEmail } from "@/lib/admin";
+import PendingMatches from "@/components/PendingMatches";
 const DAYS = ["monday", "tuesday", "wednesday", "thursday", "friday"] as const;
 const DAY_LABELS: Record<string, string> = {
   monday: "Mon",
@@ -255,6 +256,13 @@ const Availability = () => {
             {isSaving ? "Saving..." : "Save availability"}
           </Button>
         </div>
+
+        {/* Pending matches */}
+        {currentEmail && (
+          <div className="mt-10">
+            <PendingMatches email={currentEmail} />
+          </div>
+        )}
       </main>
     </div>
   );
