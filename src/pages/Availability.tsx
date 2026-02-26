@@ -13,7 +13,7 @@ import {
 import { toast } from "@/hooks/use-toast";
 import { cn } from "@/lib/utils";
 import { Check, ArrowLeft, Save } from "lucide-react";
-
+import { isAdminEmail } from "@/lib/admin";
 const DAYS = ["monday", "tuesday", "wednesday", "thursday", "friday"] as const;
 const DAY_LABELS: Record<string, string> = {
   monday: "Mon",
@@ -32,7 +32,7 @@ function formatHour(hour: number): string {
 }
 
 const Availability = () => {
-  const ADMIN_EMAIL = "admin@fathom.dev";
+  
   const navigate = useNavigate();
 
   const [currentEmail, setCurrentEmail] = useState<string | null>(null);
@@ -185,7 +185,7 @@ const Availability = () => {
               <ArrowLeft className="w-4 h-4" /> Log out
             </Button>
 
-            {currentEmail === ADMIN_EMAIL && (
+            {isAdminEmail(currentEmail) && (
               <Button variant="ghost" onClick={() => navigate("/admin")} className="gap-2 text-muted-foreground">
                 Admin
               </Button>
