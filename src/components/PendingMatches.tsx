@@ -9,7 +9,8 @@ import {
   Match,
 } from "@/lib/storage";
 import { toast } from "@/hooks/use-toast";
-import { Check, X, Coffee, Clock } from "lucide-react";
+import { Check, X, Coffee, Clock, MessageCircle } from "lucide-react";
+import { getIcebreaker } from "@/lib/icebreakers";
 
 const DAY_LABELS: Record<string, string> = {
   monday: "Monday",
@@ -143,6 +144,15 @@ const PendingMatches = ({ email }: PendingMatchesProps) => {
                       They declined
                     </Badge>
                   )}
+                </div>
+              </div>
+
+              {/* Icebreaker */}
+              <div className="flex items-start gap-2 bg-muted/30 rounded-lg px-3 py-2 text-sm">
+                <MessageCircle className="w-4 h-4 text-primary mt-0.5 shrink-0" />
+                <div>
+                  <span className="text-[11px] uppercase tracking-wider text-muted-foreground font-medium">Icebreaker</span>
+                  <p className="text-foreground">{getIcebreaker(match.id)}</p>
                 </div>
               </div>
 

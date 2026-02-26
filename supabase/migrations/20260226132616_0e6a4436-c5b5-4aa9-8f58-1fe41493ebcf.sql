@@ -1,0 +1,4 @@
+
+ALTER TABLE public.users 
+ADD COLUMN IF NOT EXISTS fun_fact TEXT DEFAULT '',
+ADD COLUMN IF NOT EXISTS interests TEXT[] DEFAULT '{}';
