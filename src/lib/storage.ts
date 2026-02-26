@@ -26,6 +26,8 @@ export interface Match {
   matched_at: string;
   shared_slot: TimeSlot;
   week: string;
+  user1_status: string;
+  user2_status: string;
 }
 
 const STORAGE_KEYS = {
@@ -134,6 +136,39 @@ export async function getMatches(): Promise<Match[]> {
     .order("matched_at", { ascending: false });
   if (error) throw error;
   return (data as any[]) || [];
+}
+
+export async function getMatchesForUser(email: string): Promise<Match[]> {
+  const { data, error } = await supabase
+    .from("matches")
+    .select("*")
+    .or(`user1_email.eq.${email},user2_email.eq.${email}`)
+    .order("matched_at", { ascending: false });
+  if (error) throw error;
+  return (data as any[]) || [];
+}
+
+export async function updateMatchStatus(
+  matchId: string,
+  userEmail: string,
+  status: "accepted" | "declined"
+): Promise<void> {
+  // Determine which user column to update
+  const { data: match, error: fetchError } = await supabase
+    .from("matches")
+    .select("user1_email, user2_email")
+    .eq("id", matchId)
+    .single();
+  if (fetchError) throw fetchError;
+
+  const column =
+    (match as any).user1_email === userEmail ? "user1_status" : "user2_status";
+
+  const { error } = await supabase
+    .from("matches")
+    .update({ [column]: status })
+    .eq("id", matchId);
+  if (error) throw error;
 }
 
 export async function runMatchingAlgorithm(): Promise<Match[]> {
