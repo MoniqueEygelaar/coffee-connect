@@ -12,7 +12,7 @@ import {
 } from "@/lib/storage";
 import { toast } from "@/hooks/use-toast";
 import { cn } from "@/lib/utils";
-import { Check, ArrowLeft, Save } from "lucide-react";
+import { Check, ArrowLeft, Save, Trophy } from "lucide-react";
 import { isAdminEmail } from "@/lib/admin";
 import PendingMatches from "@/components/PendingMatches";
 import ProfileEditor from "@/components/ProfileEditor";
@@ -182,6 +182,13 @@ const Availability = () => {
             <span className="text-lg font-semibold text-foreground tracking-tight">Watercooler</span>
           </div>
           <div className="flex gap-2">
+            <Button
+              variant="ghost"
+              onClick={() => navigate("/dashboard")}
+              className="gap-2 text-muted-foreground"
+            >
+              <Trophy className="w-4 h-4" /> Team
+            </Button>
             <Button
               variant="ghost"
               onClick={() => {
