@@ -6,6 +6,7 @@ import { BrowserRouter, Routes, Route } from "react-router-dom";
 import Index from "./pages/Index";
 import Availability from "./pages/Availability";
 import Admin from "./pages/Admin";
+import Dashboard from "./pages/Dashboard";
 import NotFound from "./pages/NotFound";
 import ProtectedRoute from "./components/ProtectedRoute";
 
@@ -20,6 +21,7 @@ const App = () => (
         <Routes>
           <Route path="/" element={<Index />} />
           <Route path="/availability" element={<Availability />} />
+          <Route path="/dashboard" element={<Dashboard />} />
           <Route
             path="/admin"
             element={
