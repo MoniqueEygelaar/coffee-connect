@@ -134,7 +134,7 @@ const Index = () => {
         transition={{ delay: 0.5 }}
         className="mt-10 text-center text-sm text-gray-300"
       >
-        Made with ❤️ for team bonding
+        Where great conversations start ☕
       </motion.div>
     </div>
   );
